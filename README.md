@@ -48,13 +48,13 @@ Uma solução corporativa e intuitiva para visualização, divisão de áreas de
 * **Zero Persistência em Disco / Sem LocalStorage**: Por diretriz de confidencialidade e segurança, todas as informações cadastradas residem exclusivamente na memória RAM da sessão do navegador.
 * **Proteção contra Perda Acidental**: Alerta do navegador (`beforeunload`) para prevenir fechamento ou recarregamento involuntário da página.
 
-### 7. 📦 Exportação Completa de Pacote (.zip)
+### 7. 📦 Exportação Completa de Pacote (.zip) & Geomarketing Corporativo
 Ao clicar em **Baixar Pacote (.zip)**, o sistema compila instantaneamente:
-1. **Foto PNG do Mapa**: Imagem em alta resolução (scale: 2x) que reenquadra automaticamente o estado selecionado, eliminando riscos de cortes por movimentação prévia do mapa.
-2. **Planilha Excel Estilizada (.xlsx)**: Gerada via **ExcelJS**, com cabeçalho corporativo roxo, linhas zebradas e células de cores preenchidas visualmente em ARGB idênticas às cores do mapa.
-3. **Relatório Executivo em PDF (2 Folhas)**:
-   * **Folha 1 (Visual)**: Cabeçalho com dados da emissão e mapa colorido do Estado em alta definição ocupando a página.
-   * **Folha 2 (Tabela & Legenda)**: Resumo executivo com contadores de cobertura, e tabela centralizada completa com Número, Município, Marca, Representante e Amostra Gráfica da Cor.
+1. **Mapa Vetorial em Altíssima Definição (PNG)**: Imagem de 2400 x 1500 px sem compressão, com polígonos municipais nítidos, preenchimento das cores dos representantes e áreas não atendidas em branco.
+2. **Planilha Excel Estilizada (.xlsx)**: Gerada via **ExcelJS**, com cabeçalho corporativo, linhas zebradas e células de cores preenchidas visualmente em ARGB idênticas às cores do mapa, 100% compatível para reimportação.
+3. **Relatório Executivo em PDF (2 Folhas - Padrão Geomarketing Corporativo)**:
+   * **Folha 1 (Mapa Territorial Vetorial)**: Fundo institucional branco de alto contraste, nome do Estado em destaque, malha vetorial com numeração centralizada nos centróides das cidades, callouts elegantes para cidades-polo, Rosa dos Ventos (`N ↑`) e barra de legenda com contagem exata e nota de correspondência toponímica.
+   * **Folha 2 (Relação de Municípios)**: Agrupamento inteligente por representante, exibição em linha fluida com marcadores para poucas cidades e grade tipográfica estruturada em **4 colunas perfeitamente alinhadas** com numeração de 3 dígitos (`001`, `002`...) para grandes redes, finalizada com bloco de auditoria e validação da base.
 
 ---
 
