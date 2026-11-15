@@ -649,7 +649,16 @@ const App = (() => {
     helper.classList.remove('hidden');
 
     try {
-      const geoJson = await IBGEService.getMalhaMunicipio(municipioId);
+      let geoJson = null;
+      if (state.malhaMunicipios && Array.isArray(state.malhaMunicipios.features)) {
+        geoJson = state.malhaMunicipios.features.find(f => 
+          String(f.id) === String(municipioId) ||
+          (f.properties && String(f.properties.codarea) === String(municipioId))
+        );
+      }
+      if (!geoJson) {
+        geoJson = await IBGEService.getMalhaMunicipio(municipioId);
+      }
       state.previewGeoJson = geoJson;
       MapManager.showPreview(geoJson);
     } catch (err) {
@@ -714,6 +723,12 @@ const App = (() => {
     const marcaNome = optMarca.dataset.nome || optMarca.textContent.split(' (')[0].trim();
 
     let geoJson = state.previewGeoJson;
+    if (!geoJson && state.malhaMunicipios && Array.isArray(state.malhaMunicipios.features)) {
+      geoJson = state.malhaMunicipios.features.find(f => 
+        String(f.id) === String(municipioId) ||
+        (f.properties && String(f.properties.codarea) === String(municipioId))
+      );
+    }
     if (!geoJson) {
       try {
         geoJson = await IBGEService.getMalhaMunicipio(municipioId);

@@ -177,6 +177,30 @@ const IBGEService = (() => {
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
+
+    // 1. Tenta extrair a feature diretamente do dataset de divisões do Estado (Zero CORS, 0ms)
+    const mIdStr = String(municipioId);
+    const ufCode = Number(mIdStr.substring(0, 2));
+    const sigla = ID_TO_SIGLA[ufCode];
+    if (sigla) {
+      try {
+        const malhaEstado = await getMalhaMunicipiosEstado(sigla);
+        if (malhaEstado && Array.isArray(malhaEstado.features)) {
+          const feature = malhaEstado.features.find(f => 
+            String(f.id) === mIdStr ||
+            (f.properties && (String(f.properties.codarea) === mIdStr || String(f.properties.id) === mIdStr))
+          );
+          if (feature) {
+            geoCache.set(key, feature);
+            return feature;
+          }
+        }
+      } catch (e) {
+        console.warn(`[Local] Não foi possível extrair a malha do município ${municipioId} de ${sigla}:`, e);
+      }
+    }
+
+    // 2. Fallback para API do IBGE
     const data = await fetchIBGE(`v3/malhas/municipios/${municipioId}?formato=application/vnd.geo+json`);
     geoCache.set(key, data);
     return data;
