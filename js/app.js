@@ -828,6 +828,19 @@ const App = (() => {
     }
   }
 
+  function atualizarDatalist() {
+    const datalist = document.getElementById('datalistRepresentantes');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    const repsUnicos = [...new Set(state.itensCadastrados.map(it => (it.representante || '').trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    repsUnicos.forEach(rep => {
+      const opt = document.createElement('option');
+      opt.value = rep;
+      datalist.appendChild(opt);
+    });
+  }
+
   function atualizarRepresentanteCompleto(nomeAntigo, novoNome, novaCor) {
     if (!nomeAntigo || !novoNome) return;
     const antigoLower = nomeAntigo.trim().toLowerCase();
@@ -851,7 +864,7 @@ const App = (() => {
         state.representantesExistentes.delete(nomeAntigo.trim());
         state.representantesExistentes.add(nomeLimpo);
       }
-      atualizarDatalistRepresentantes();
+      atualizarDatalist();
 
       cidadesAfetadas.forEach(mId => {
         const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
@@ -927,6 +940,7 @@ const App = (() => {
 
     badgeCount.textContent = `${state.itensCadastrados.length} ${state.itensCadastrados.length === 1 ? 'item' : 'itens'}`;
     atualizarResumoLateral();
+    atualizarDatalist();
 
     if (itens.length === 0) {
       tbody.innerHTML = `

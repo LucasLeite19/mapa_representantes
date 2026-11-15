@@ -496,12 +496,23 @@ const MapManager = (() => {
     });
 
     // 3. No CLIQUE: Abre Popup rico com todas as marcas e dados completos
-    const isPopupOpen = layer.isPopupOpen && layer.isPopupOpen();
-    if (isPopupOpen) {
-      layer.setPopupContent(buildDetailedCardHtml(cidadeNome, itensDaCidade));
-    } else {
+    const popupHtml = buildDetailedCardHtml(cidadeNome, itensDaCidade);
+    let popupAberto = false;
+    if (layer.isPopupOpen && layer.isPopupOpen()) {
+      layer.setPopupContent(popupHtml);
+      popupAberto = true;
+    }
+    if (layer.eachLayer) {
+      layer.eachLayer(sub => {
+        if (sub.isPopupOpen && sub.isPopupOpen()) {
+          sub.setPopupContent(popupHtml);
+          popupAberto = true;
+        }
+      });
+    }
+    if (!popupAberto) {
       layer.unbindPopup();
-      layer.bindPopup(buildDetailedCardHtml(cidadeNome, itensDaCidade), {
+      layer.bindPopup(popupHtml, {
         className: 'rep-detailed-popup',
         autoPan: true
       });
