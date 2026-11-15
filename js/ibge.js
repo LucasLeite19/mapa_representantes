@@ -133,10 +133,39 @@ const IBGEService = (() => {
     return ESTADOS_FALLBACK;
   }
 
+  const ID_TO_SIGLA = {
+    11: 'RO', 12: 'AC', 13: 'AM', 14: 'RR', 15: 'PA', 16: 'AP', 17: 'TO',
+    21: 'MA', 22: 'PI', 23: 'CE', 24: 'RN', 25: 'PB', 26: 'PE', 27: 'AL', 28: 'SE', 29: 'BA',
+    31: 'MG', 32: 'ES', 33: 'RJ', 35: 'SP',
+    41: 'PR', 42: 'SC', 43: 'RS',
+    50: 'MS', 51: 'MT', 52: 'GO', 53: 'DF'
+  };
+
+  function toSigla(ufSiglaOuId) {
+    if (!ufSiglaOuId) return 'SP';
+    if (typeof ufSiglaOuId === 'string' && ufSiglaOuId.trim().length === 2) {
+      return ufSiglaOuId.trim().toUpperCase();
+    }
+    const num = Number(ufSiglaOuId);
+    return ID_TO_SIGLA[num] || String(ufSiglaOuId).toUpperCase();
+  }
+
   /**
    * Obtém os municípios de um determinado Estado
    */
   async function getMunicipios(ufId) {
+    const sigla = toSigla(ufId);
+    // 1. Tenta carregar do dataset estático local em data/municipios/{SIGLA}.json (Zero CORS, 15ms no Vercel Edge)
+    try {
+      const res = await fetch(`data/municipios/${sigla}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      }
+    } catch (e) {
+      console.warn(`[Local] Falha ao carregar data/municipios/${sigla}.json, usando fallback IBGE:`, e);
+    }
+    // 2. Fallback para API do IBGE
     return await fetchIBGE(`v1/localidades/estados/${ufId}/municipios?orderBy=nome`);
   }
 
@@ -157,11 +186,26 @@ const IBGEService = (() => {
    * Obtém o contorno geral do Estado (fronteira externa)
    */
   async function getMalhaEstado(ufSiglaOuId) {
-    const key = `UF_BORDER_${ufSiglaOuId}`;
+    const sigla = toSigla(ufSiglaOuId);
+    const key = `UF_BORDER_${sigla}`;
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
-    const data = await fetchIBGE(`v3/malhas/estados/${ufSiglaOuId}?formato=application/vnd.geo+json&qualidade=minima`);
+
+    // 1. Tenta carregar do dataset estático local (Zero CORS, instantâneo)
+    try {
+      const res = await fetch(`data/malhas_estados/${sigla}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        geoCache.set(key, data);
+        return data;
+      }
+    } catch (e) {
+      console.warn(`[Local] Falha ao carregar data/malhas_estados/${sigla}.json:`, e);
+    }
+
+    // 2. Fallback para API do IBGE
+    const data = await fetchIBGE(`v3/malhas/estados/${sigla}?formato=application/vnd.geo+json&qualidade=minima`);
     geoCache.set(key, data);
     return data;
   }
@@ -171,11 +215,26 @@ const IBGEService = (() => {
    * API IBGE: /api/v3/malhas/estados/{UF}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima
    */
   async function getMalhaMunicipiosEstado(ufSiglaOuId) {
-    const key = `UF_MUNICIPIOS_${ufSiglaOuId}`;
+    const sigla = toSigla(ufSiglaOuId);
+    const key = `UF_MUNICIPIOS_${sigla}`;
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
-    const data = await fetchIBGE(`v3/malhas/estados/${ufSiglaOuId}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima`);
+
+    // 1. Tenta carregar do dataset estático local (Zero CORS, instantâneo)
+    try {
+      const res = await fetch(`data/malhas_municipios/${sigla}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        geoCache.set(key, data);
+        return data;
+      }
+    } catch (e) {
+      console.warn(`[Local] Falha ao carregar data/malhas_municipios/${sigla}.json:`, e);
+    }
+
+    // 2. Fallback para API do IBGE
+    const data = await fetchIBGE(`v3/malhas/estados/${sigla}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima`);
     geoCache.set(key, data);
     return data;
   }
