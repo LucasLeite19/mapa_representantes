@@ -17,8 +17,28 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   let reqPath = decodeURI(req.url.split('?')[0]);
+
+  // Proxy transparente para API do IBGE no ambiente local (elimina bloqueios de CORS)
+  if (reqPath.startsWith('/api/ibge/')) {
+    const targetUrl = 'https://servicodados.ibge.gov.br/api/' + reqPath.replace(/^\/api\/ibge\//, '') + (req.url.includes('?') ? '?' + req.url.split('?')[1] : '');
+    try {
+      const ibgeRes = await fetch(targetUrl);
+      const data = await ibgeRes.arrayBuffer();
+      res.writeHead(ibgeRes.status, {
+        'Content-Type': ibgeRes.headers.get('content-type') || 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(Buffer.from(data));
+      return;
+    } catch (err) {
+      res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Erro ao consultar API IBGE: ' + err.message);
+      return;
+    }
+  }
+
   if (reqPath === '/' || reqPath === '') {
     reqPath = '/index.html';
   }

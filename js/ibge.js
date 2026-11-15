@@ -71,20 +71,64 @@ const IBGEService = (() => {
   ].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   /**
+   * Executa requisições para a API do IBGE com roteamento inteligente anti-CORS:
+   * 1. Tenta o proxy `/api/ibge/...` (Vercel rewrites na web ou server.js no ambiente local)
+   * 2. Se falhar ou estiver em file://, tenta a chamada direta na API do IBGE
+   * 3. Se o navegador bloquear por CORS, usa o proxy público de contingência (allorigins)
+   */
+  async function fetchIBGE(endpointPath) {
+    const cleanPath = endpointPath.replace(/^\/?(api\/)?/, '');
+    const isFileProtocol = window.location.protocol === 'file:';
+
+    // 1. Proxy dedicado do Vercel / server.js (100% livre de CORS)
+    if (!isFileProtocol) {
+      try {
+        const proxyUrl = `/api/ibge/${cleanPath}`;
+        const res = await fetch(proxyUrl);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn(`[IBGE] Falha no proxy /api/ibge/${cleanPath}, tentando direto:`, e);
+      }
+    }
+
+    // 2. Chamada direta ao endpoint governamental do IBGE
+    const directUrl = `https://servicodados.ibge.gov.br/api/${cleanPath}`;
+    try {
+      const res = await fetch(directUrl);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn(`[IBGE] Falha na chamada direta para ${directUrl}, tentando contingência CORS:`, e);
+    }
+
+    // 3. Proxy de contingência pública para contornar restrições estritas de CORS no browser
+    try {
+      const fallbackUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
+      const res = await fetch(fallbackUrl);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.error(`[IBGE] Falha em todas as vias de acesso para ${cleanPath}:`, e);
+    }
+
+    throw new Error(`Não foi possível carregar os dados geográficos do IBGE (${cleanPath}).`);
+  }
+
+  /**
    * Obtém todos os Estados do Brasil ordenados por nome
    */
   async function getEstados() {
     try {
-      const url = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome';
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
-        }
+      const data = await fetchIBGE('v1/localidades/estados?orderBy=nome');
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
       }
     } catch (err) {
-      console.warn('API IBGE Estados inacessível ou com bloqueio CORS. Utilizando lista estática de contingência:', err);
+      console.warn('API IBGE Estados inacessível. Utilizando lista estática de contingência:', err);
     }
     return ESTADOS_FALLBACK;
   }
@@ -93,10 +137,7 @@ const IBGEService = (() => {
    * Obtém os municípios de um determinado Estado
    */
   async function getMunicipios(ufId) {
-    const url = `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${ufId}/municipios?orderBy=nome`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao obter Municípios: HTTP ${res.status}`);
-    return await res.json();
+    return await fetchIBGE(`v1/localidades/estados/${ufId}/municipios?orderBy=nome`);
   }
 
   /**
@@ -107,10 +148,7 @@ const IBGEService = (() => {
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
-    const url = `https://servicodados.ibge.gov.br/api/v3/malhas/municipios/${municipioId}?formato=application/vnd.geo+json`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao obter malha do município ${municipioId}: HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await fetchIBGE(`v3/malhas/municipios/${municipioId}?formato=application/vnd.geo+json`);
     geoCache.set(key, data);
     return data;
   }
@@ -123,10 +161,7 @@ const IBGEService = (() => {
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
-    const url = `https://servicodados.ibge.gov.br/api/v3/malhas/estados/${ufSiglaOuId}?formato=application/vnd.geo+json&qualidade=minima`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao obter contorno do estado ${ufSiglaOuId}: HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await fetchIBGE(`v3/malhas/estados/${ufSiglaOuId}?formato=application/vnd.geo+json&qualidade=minima`);
     geoCache.set(key, data);
     return data;
   }
@@ -140,10 +175,7 @@ const IBGEService = (() => {
     if (geoCache.has(key)) {
       return geoCache.get(key);
     }
-    const url = `https://servicodados.ibge.gov.br/api/v3/malhas/estados/${ufSiglaOuId}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Falha ao obter malha dos municípios do estado ${ufSiglaOuId}: HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await fetchIBGE(`v3/malhas/estados/${ufSiglaOuId}?intrarregiao=municipio&formato=application/vnd.geo+json&qualidade=minima`);
     geoCache.set(key, data);
     return data;
   }
