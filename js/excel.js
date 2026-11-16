@@ -473,10 +473,11 @@ const ExcelManager = (() => {
     const midLat = (minLat + maxLat) / 2;
     const cosLat = Math.cos((midLat * Math.PI) / 180);
 
-    const padX = 160;
-    const padY = 130;
+    const padX = 140;
+    const padTop = 190;
+    const padBottom = 190;
     const availW = canvas.width - padX * 2;
-    const availH = canvas.height - padY * 2;
+    const availH = canvas.height - (padTop + padBottom);
 
     const deltaX = (maxLng - minLng) * cosLat;
     const deltaY = (maxLat - minLat);
@@ -486,7 +487,7 @@ const ExcelManager = (() => {
     const renderH = deltaY * scale;
 
     const offsetX = padX + (availW - renderW) / 2;
-    const offsetY = padY + (availH - renderH) / 2;
+    const offsetY = padTop + (availH - renderH) / 2;
 
     function project(lng, lat) {
       const x = offsetX + (lng - minLng) * cosLat * scale;
@@ -613,6 +614,77 @@ const ExcelManager = (() => {
     ctx.fill();
     ctx.restore();
 
+    // Passo 5: Cabeçalho Corporativo na Imagem (PNG)
+    const estadoNome = (estadoInfo ? estadoInfo.nome : 'ESTADO').toUpperCase();
+    ctx.save();
+    ctx.fillStyle = '#0F172A'; // Navy Corporativo
+    ctx.font = 'bold 44px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(estadoNome, 100, 75);
+
+    ctx.fillStyle = '#64748B'; // Slate
+    ctx.font = '22px Helvetica, Arial, sans-serif';
+    const subTexto = 'Divisão de atendimento comercial' + (marcasTexto ? ' | ' + marcasTexto : '');
+    ctx.fillText(subTexto, 100, 130);
+    ctx.restore();
+
+    // Passo 6: Barra de Legenda e Rodapé na Imagem (PNG)
+    ctx.save();
+    const legendY = 1360;
+    let currLegX = 100;
+
+    repGroups.forEach(rep => {
+      ctx.fillStyle = rep.cor;
+      ctx.fillRect(currLegX, legendY - 14, 30, 20);
+      ctx.strokeStyle = '#94A3B8';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(currLegX, legendY - 14, 30, 20);
+
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '22px Helvetica, Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const label = `${rep.nome} · ${rep.cidades.length} cidades`;
+      ctx.fillText(label, currLegX + 40, legendY - 4);
+
+      const w = ctx.measureText(label).width;
+      currLegX += 40 + w + 45;
+    });
+
+    // Amostra "Fora da lista"
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(currLegX, legendY - 14, 30, 20);
+    ctx.strokeStyle = '#94A3B8';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(currLegX, legendY - 14, 30, 20);
+
+    ctx.fillStyle = '#0F172A';
+    ctx.font = '22px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const foraLabel = `Fora da lista · ${totalForaDaLista} cidades`;
+    ctx.fillText(foraLabel, currLegX + 40, legendY - 4);
+
+    // Nota explicativa
+    const repComNumeros = repGroups.find(r => r.cidades.length > 6);
+    const textoNota = repComNumeros
+      ? `Os números identificam as cidades de ${repComNumeros.nome} na relação da página 2.`
+      : 'Os números identificam as cidades na relação da página 2.';
+
+    ctx.fillStyle = '#475569';
+    ctx.font = '20px Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(textoNota, 100, 1400);
+
+    // Rodapé de fontes cartográficas
+    const today = new Date().toLocaleDateString('pt-BR');
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '17px Helvetica, Arial, sans-serif';
+    ctx.fillText(`Fonte territorial: IBGE, API de Malhas (simplificada). Atendimento: planilha fornecida. | Elaborado em ${today}`, 100, 1438);
+    ctx.restore();
+
     const dataUrl = canvas.toDataURL('image/png');
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 
@@ -662,74 +734,10 @@ const ExcelManager = (() => {
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
-    // Título Principal
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.setTextColor(15, 23, 42); // Navy Corporativo #0F172A
-    doc.text(estadoNome.toUpperCase(), 16, 18);
-
-    // Subtítulo
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10.5);
-    doc.setTextColor(100, 116, 139); // Slate #64748B
-    const sub = 'Divisão de atendimento comercial' + (marcasTexto ? ' | ' + marcasTexto : '');
-    doc.text(sub, 16, 25);
-
-    // Imagem do Mapa Vetorial de Alta Resolução
+    // Imagem Completa do Mapa Vetorial Executivo de Alta Resolução (inclui cabeçalho corporativo e legenda integrados)
     if (vectorMapResult && vectorMapResult.dataUrl) {
-      doc.addImage(vectorMapResult.dataUrl, 'PNG', 16, 28, 265, 148);
+      doc.addImage(vectorMapResult.dataUrl, 'PNG', 12, 10, 273, 170.6);
     }
-
-    // Legenda no rodapé da Página 1
-    const legendY = 182;
-    let currX = 16;
-
-    repGroups.forEach(rep => {
-      const rgb = hexToRgb(rep.cor);
-      doc.setFillColor(rgb.r, rgb.g, rgb.b);
-      doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'F');
-      doc.setDrawColor(148, 163, 184);
-      doc.setLineWidth(0.2);
-      doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'D');
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(15, 23, 42);
-      const repLabel = `${rep.nome} · ${rep.cidades.length} cidades`;
-      doc.text(repLabel, currX + 9.5, legendY);
-
-      const strW = doc.getTextWidth(repLabel);
-      currX += 9.5 + strW + 10;
-    });
-
-    // Amostra "Fora da lista"
-    doc.setFillColor(255, 255, 255);
-    doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'F');
-    doc.setDrawColor(148, 163, 184);
-    doc.setLineWidth(0.2);
-    doc.rect(currX, legendY - 3.5, 7.5, 4.5, 'D');
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(15, 23, 42);
-    const foraLabel = `Fora da lista · ${totalForaDaLista} cidades`;
-    doc.text(foraLabel, currX + 9.5, legendY);
-
-    // Nota explicativa
-    const repComNumeros = repGroups.find(r => r.cidades.length > 6);
-    const textoNota = repComNumeros
-      ? `Os números identificam as cidades de ${repComNumeros.nome} na relação da página 2.`
-      : 'Os números identificam as cidades na relação da página 2.';
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(71, 85, 105);
-    doc.text(textoNota, 16, 191);
-
-    // Rodapé de fontes cartográficas
-    doc.setFontSize(7.5);
-    doc.setTextColor(148, 163, 184);
-    doc.text(`Fonte territorial: IBGE, API de Malhas (simplificada). Atendimento: planilha fornecida. | Elaborado em ${today}`, 16, 199);
 
     // ==========================================
     // FOLHA 2: RELAÇÃO DE MUNICÍPIOS
