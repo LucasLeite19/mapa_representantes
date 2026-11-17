@@ -119,17 +119,9 @@ const IBGEService = (() => {
   }
 
   /**
-   * Obtém todos os Estados do Brasil ordenados por nome
+   * Obtém todos os Estados do Brasil ordenados por nome (100% local e instantâneo, livre de bloqueios CORS/WAF)
    */
   async function getEstados() {
-    try {
-      const data = await fetchIBGE('v1/localidades/estados?orderBy=nome');
-      if (Array.isArray(data) && data.length > 0) {
-        return data;
-      }
-    } catch (err) {
-      console.warn('API IBGE Estados inacessível. Utilizando lista estática de contingência:', err);
-    }
     return ESTADOS_FALLBACK;
   }
 

@@ -706,3 +706,5 @@ const I18nManager = (() => {
     applyTranslations
   };
 })();
+
+window.I18nManager = I18nManager;
