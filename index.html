@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestor de Representantes por Município - Brasil</title>
   
-  <!-- Favicon com a Logotipo Roxa Oficial -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c3aed'/%3E%3Cpath d='M12 25l-7-3.5V8.5l7 3.5 8-4 7 3.5v13l-7-3.5-8 4z' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <!-- Favicon com a Logotipo Sentinel Cobalt Oficial -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M12 25l-7-3.5V8.5l7 3.5 8-4 7 3.5v13l-7-3.5-8 4z' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="alternate icon" href="favicon.svg" type="image/svg+xml" />
+
+  <!-- Tipografia Profissional: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS via CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" />
@@ -15,7 +20,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- Estilos Customizados da Aplicação -->
+  <!-- Estilos Customizados da Aplicação (Sentinel Cobalt + Dark/Light Mode) -->
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- Bibliotecas Externas (CDNs Homologadas) -->
@@ -31,29 +36,93 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans antialiased">
 
-  <!-- Header Superior Limpo: Apenas Logo, Título e Descrição com Textos em Preto -->
-  <header class="bg-white border-b border-gray-200 shadow-sm w-full">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+  <!-- Header Superior com Marca e Pílula de Tema + Idioma (Sentinel Cobalt) -->
+  <header class="bg-white border-b border-gray-200 shadow-sm w-full z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-3">
       
       <!-- Marca e Título -->
       <div class="flex items-center space-x-3.5">
         <div class="header-logo-badge">
-          <svg style="width: 26px; height: 26px;" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-black tracking-tight text-black">
+          <h1 data-i18n="header_title" class="text-lg sm:text-2xl font-extrabold tracking-tight text-black">
             Gestor de Representantes
           </h1>
-          <p class="text-xs text-black font-semibold">Distribuição territorial e malhas geográficas por município</p>
+          <p data-i18n="header_subtitle" class="text-xs text-gray-600 font-medium">
+            Distribuição territorial e malhas geográficas por município
+          </p>
+        </div>
+      </div>
+
+      <!-- Pílula de Alternância de Tema (Sol/Lua) + Idioma (PT/EN/ES) -->
+      <div class="theme-lang-pill relative">
+        <!-- Botão de Alternar Tema (Dark / Light) -->
+        <button id="btnThemeToggle" type="button" class="theme-toggle-btn" aria-label="Alternar Tema" title="Alternar Modo Claro / Escuro">
+          <!-- Ícone Sol (Visível no Modo Escuro) -->
+          <svg id="themeIconSun" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Ícone Lua (Visível no Modo Claro) -->
+          <svg id="themeIconMoon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Divisor Vertical -->
+        <div class="pill-divider"></div>
+
+        <!-- Seletor de Idioma -->
+        <div class="relative">
+          <button id="btnLangToggle" type="button" class="lang-toggle-btn" aria-label="Selecionar Idioma">
+            <span id="currentLangFlag" class="inline-flex items-center"></span>
+            <span id="currentLangCode">PT</span>
+            <svg class="w-3 h-3 opacity-70" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Menu Dropdown de Idiomas (PT / EN / ES) -->
+          <div id="langDropdownMenu" class="lang-dropdown-menu hidden">
+            <button type="button" data-lang="pt" class="lang-option-btn">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-3 rounded-[2px] flex-shrink-0" viewBox="0 0 28 20" fill="none"><rect width="28" height="20" rx="2" fill="#009B3A"/><path d="M14 2.5L25.5 10L14 17.5L2.5 10L14 2.5Z" fill="#FEDF00"/><circle cx="14" cy="10" r="4.2" fill="#002776"/></svg>
+                <span>Português</span>
+              </span>
+              <span class="text-[10px] font-mono opacity-75">PT</span>
+            </button>
+            <button type="button" data-lang="en" class="lang-option-btn">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-3 rounded-[2px] flex-shrink-0" viewBox="0 0 28 20" fill="none"><rect width="28" height="20" rx="2" fill="#FFFFFF"/><path d="M0 0H28V2.2H0V0ZM0 4.4H28V6.6H0V4.4ZM0 8.8H28V11H0V8.8ZM0 13.2H28V15.4H0V13.2ZM0 17.6H28V20H0V17.6Z" fill="#B22234"/><rect width="12" height="11" rx="1" fill="#3C3B6E"/></svg>
+                <span>English</span>
+              </span>
+              <span class="text-[10px] font-mono opacity-75">EN</span>
+            </button>
+            <button type="button" data-lang="es" class="lang-option-btn">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-3 rounded-[2px] flex-shrink-0" viewBox="0 0 28 20" fill="none"><rect width="28" height="20" rx="2" fill="#AA151B"/><rect y="5" width="28" height="10" fill="#F1BF00"/></svg>
+                <span>Español</span>
+              </span>
+              <span class="text-[10px] font-mono opacity-75">ES</span>
+            </button>
+          </div>
         </div>
       </div>
 
     </div>
   </header>
 
-  <!-- Sub-Header Único com 4 Botões Centralizados (Destaque Roxo Unificado) -->
+  <!-- Sub-Header Único com 4 Botões Centralizados -->
   <nav class="bg-gray-100 border-b border-gray-200 sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center">
       <div class="inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3">
@@ -63,15 +132,15 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span>Cadastro Manual</span>
+          <span data-i18n="nav_manual">Cadastro Manual</span>
         </button>
 
         <!-- Botão 2: Importar Excel -->
         <button id="navBtnExcel" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all nav-btn-inactive">
-          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <span>Importar Excel</span>
+          <span data-i18n="nav_excel">Importar Excel</span>
         </button>
 
         <!-- Botão 3: Sugestão de Divisões (Em Breve) -->
@@ -79,8 +148,8 @@
           <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
           </svg>
-          <span>Sugestão de Divisões</span>
-          <span class="bg-purple-100 text-purple-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-purple-200">Em Breve</span>
+          <span data-i18n="nav_sugestoes">Sugestão de Divisões</span>
+          <span data-i18n="nav_em_breve" class="bg-purple-100 text-purple-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-purple-200">Em Breve</span>
         </button>
 
         <!-- Botão 4: Ajuda (Guia de Uso) -->
@@ -88,7 +157,7 @@
           <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>Ajuda (Guia de Uso)</span>
+          <span data-i18n="nav_ajuda">Ajuda (Guia de Uso)</span>
         </button>
 
       </div>
@@ -101,17 +170,16 @@
     <!-- Grid: Painel de Controle e Mapa -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-      <!-- Coluna da Esquerda: Painel Dinâmico e Contínuo de Cima a Baixo -->
+      <!-- Coluna da Esquerda: Painel Dinâmico -->
       <div class="lg:col-span-4 flex flex-col">
         
-        <!-- Card Operacional Integrado (Sem Espaço Vazio, Fechado de Cima a Baixo) -->
         <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden sidebar-full-card">
           
           <!-- Cabeçalho do Card -->
           <div class="px-5 py-3.5 border-b border-gray-200 bg-gray-50 flex items-center">
             <div class="flex items-center space-x-2.5">
               <span id="cardHeaderIcon" class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-              <h2 id="cardHeaderTitle" class="text-sm font-black text-black">
+              <h2 id="cardHeaderTitle" data-i18n="card_title_manual" class="text-sm font-bold text-black">
                 Cadastro Manual de Representante
               </h2>
             </div>
@@ -124,68 +192,68 @@
               <div class="space-y-3.5">
                 <!-- Seleção de Estado -->
                 <div>
-                  <label for="selectEstado" class="block text-xs font-black text-black mb-1">
+                  <label for="selectEstado" data-i18n="label_estado" class="block text-xs font-bold text-black mb-1">
                     1. Estado (UF)
                   </label>
-                  <select id="selectEstado" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow">
-                    <option value="">Carregando Estados...</option>
+                  <select id="selectEstado" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold transition-shadow">
+                    <option value="" data-i18n="opt_carregando_estados">Carregando Estados...</option>
                   </select>
                 </div>
 
                 <!-- Seleção de Município -->
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label for="selectMunicipio" class="block text-xs font-black text-black">
+                    <label for="selectMunicipio" data-i18n="label_municipio" class="block text-xs font-bold text-black">
                       2. Município (ou clique no mapa)
                     </label>
-                    <span id="labelTotalMunicipios" class="text-xs text-black font-bold"></span>
+                    <span id="labelTotalMunicipios" class="text-xs text-gray-500 font-bold"></span>
                   </div>
-                  <select id="selectMunicipio" disabled class="w-full text-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed">
-                    <option value="">Selecione um Estado primeiro</option>
+                  <select id="selectMunicipio" disabled class="w-full text-sm bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold transition-shadow disabled:opacity-60 disabled:cursor-not-allowed">
+                    <option value="" data-i18n="opt_selecione_estado_primeiro">Selecione um Estado primeiro</option>
                   </select>
                   <p id="helperMunicipio" class="text-xs text-purple-700 font-bold mt-1.5 hidden flex items-center gap-1">
                     <svg class="w-3.5 h-3.5 animate-spin text-purple-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                    <span>Buscando contorno da cidade no IBGE...</span>
+                    <span data-i18n="helper_buscando_contorno">Buscando contorno da cidade no IBGE...</span>
                   </p>
                 </div>
 
                 <!-- Seleção de Marca (Até 6 Marcas) -->
                 <div>
                   <div class="flex items-center justify-between mb-1">
-                    <label for="selectMarca" class="block text-xs font-black text-black">
+                    <label for="selectMarca" data-i18n="label_marca" class="block text-xs font-bold text-black">
                       3. Marca Representada (até 6 por cidade)
                     </label>
-                    <button id="btnGerenciarMarcas" type="button" class="text-[11px] text-purple-700 hover:text-purple-900 font-black flex items-center gap-0.5">
+                    <button id="btnGerenciarMarcas" type="button" class="text-[11px] text-purple-700 hover:underline font-bold flex items-center gap-0.5">
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      <span>Renomear</span>
+                      <span data-i18n="btn_renomear_marcas">Renomear</span>
                     </button>
                   </div>
-                  <select id="selectMarca" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow">
+                  <select id="selectMarca" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold transition-shadow">
                     <!-- Inserido dinamicamente via JS -->
                   </select>
                 </div>
 
                 <!-- Nome do Representante -->
                 <div>
-                  <label for="inputRepresentante" class="block text-xs font-black text-black mb-1">
+                  <label for="inputRepresentante" data-i18n="label_nome_rep" class="block text-xs font-bold text-black mb-1">
                     4. Nome do Representante
                   </label>
-                  <input id="inputRepresentante" type="text" list="datalistRepresentantes" placeholder="Ex: Lucas Ferreira" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-shadow" />
+                  <input id="inputRepresentante" type="text" list="datalistRepresentantes" data-i18n-placeholder="placeholder_nome_rep" placeholder="Ex: Lucas Ferreira" class="w-full text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 text-black font-semibold transition-shadow" />
                   <datalist id="datalistRepresentantes"></datalist>
-                  <p class="text-xs text-gray-700 font-medium mt-1">Ao digitar um representante cadastrado, a cor dele é carregada automaticamente.</p>
+                  <p data-i18n="helper_cor_auto" class="text-xs text-gray-600 font-medium mt-1">Ao digitar um representante cadastrado, a cor dele é carregada automaticamente.</p>
                 </div>
 
                 <!-- Cor do Representante -->
                 <div>
-                  <label class="block text-xs font-black text-black mb-1">
+                  <label data-i18n="label_cor_destaque" class="block text-xs font-bold text-black mb-1">
                     5. Cor de Destaque no Mapa
                   </label>
                   <div class="flex items-center space-x-3">
                     <div class="relative flex items-center">
-                      <input id="inputCor" type="color" value="#7c3aed" class="w-11 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
+                      <input id="inputCor" type="color" value="#2563eb" class="w-11 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
                     </div>
-                    <input id="inputCorHex" type="text" value="#7C3AED" maxlength="7" class="w-28 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-center text-black font-black focus:outline-none focus:ring-2 focus:ring-purple-600" />
-                    <button id="btnCorAleatoria" type="button" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
+                    <input id="inputCorHex" type="text" value="#2563EB" maxlength="7" class="w-28 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-center text-black font-bold" />
+                    <button id="btnCorAleatoria" type="button" data-i18n-title="title_cor_aleatoria" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
@@ -199,58 +267,58 @@
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span id="btnSalvarText">Salvar Representante</span>
+                    <span id="btnSalvarText" data-i18n="btn_salvar_rep">Salvar Representante</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Painel de Resumo Territorial (Preenche a parte inferior do card) -->
+              <!-- Painel de Resumo Territorial -->
               <div class="mt-4 pt-3.5 border-t border-gray-200 space-y-2 bg-gray-50 -mx-5 -mb-5 p-4 rounded-b-xl">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-black font-bold">Estado Selecionado:</span>
-                  <span id="cardEstadoAtivo" class="text-black font-black">Nenhum</span>
+                  <span data-i18n="summary_estado" class="text-gray-600 font-semibold">Estado Selecionado:</span>
+                  <span id="cardEstadoAtivo" class="text-black font-bold">Nenhum</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-black font-bold">Cidades com Representante:</span>
-                  <span id="cardCidadesAtivas" class="text-purple-700 font-black">0 cadastradas</span>
+                  <span data-i18n="summary_cidades_rep" class="text-gray-600 font-semibold">Cidades com Representante:</span>
+                  <span id="cardCidadesAtivas" class="text-purple-700 font-bold">0 cadastradas</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-black font-bold">Cidades Disponíveis no Estado:</span>
-                  <span id="cardCidadesDisponiveis" class="text-black font-black">-</span>
+                  <span data-i18n="summary_cidades_disp" class="text-gray-600 font-semibold">Cidades Disponíveis no Estado:</span>
+                  <span id="cardCidadesDisponiveis" class="text-black font-bold">-</span>
                 </div>
-                <div class="p-2.5 bg-purple-50 rounded-lg border border-purple-200 text-[11px] text-purple-950 font-medium flex items-start gap-1.5 mt-1">
+                <div class="p-2.5 bg-purple-50 rounded-lg border border-purple-200 text-[11px] text-black font-medium flex items-start gap-1.5 mt-1">
                   <span class="text-purple-700 font-bold text-xs">💡</span>
-                  <span><strong>Dica:</strong> Você pode clicar diretamente em qualquer cidade no mapa para selecioná-la de imediato!</span>
+                  <span><strong data-i18n="tip_label">Dica:</strong> <span data-i18n="tip_text">Você pode clicar diretamente em qualquer cidade no mapa para selecioná-la de imediato!</span></span>
                 </div>
               </div>
 
             </div>
 
-            <!-- Painel 2: Importação em Massa (Ativado pelo botão no topo) -->
+            <!-- Painel 2: Importação em Massa -->
             <div id="contentMassa" class="space-y-4 flex-1 flex flex-col justify-between hidden">
               
               <div class="space-y-3.5">
                 <div class="bg-gray-100 rounded-lg p-3 text-xs text-black border border-gray-200 space-y-1">
                   <p class="font-bold flex items-center gap-1.5 text-black">
                     <svg class="w-4 h-4 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Importação de Marcas em Lote:
+                    <span data-i18n="excel_lote_title">Importação de Marcas em Lote:</span>
                   </p>
-                  <ol class="list-decimal list-inside space-y-1 text-black font-medium">
-                    <li>Selecione o Estado desejado.</li>
-                    <li>Baixe a planilha modelo (.xlsx) contendo as colunas de Município e Marca.</li>
-                    <li>Preencha as linhas (até 6 marcas por cidade) e suba a planilha abaixo.</li>
+                  <ol class="list-decimal list-inside space-y-1 text-gray-700 font-medium">
+                    <li data-i18n="excel_step_1">Selecione o Estado desejado.</li>
+                    <li data-i18n="excel_step_2">Baixe a planilha modelo (.xlsx) contendo as colunas de Município e Marca.</li>
+                    <li data-i18n="excel_step_3">Preencha as linhas (até 6 marcas por cidade) e suba a planilha abaixo.</li>
                   </ol>
                 </div>
 
                 <!-- Botão Baixar Modelo -->
                 <div>
                   <button id="btnBaixarModelo" class="w-full bg-white hover:bg-gray-50 text-black font-bold py-2.5 px-4 rounded-lg border border-gray-300 shadow-xs transition-all flex items-center justify-center gap-2 text-sm">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>Baixar Planilha Modelo (.xlsx)</span>
+                    <span data-i18n="btn_baixar_modelo">Baixar Planilha Modelo (.xlsx)</span>
                   </button>
-                  <p id="infoModeloEstado" class="text-xs text-black mt-1 text-center font-bold">Nenhum Estado selecionado</p>
+                  <p id="infoModeloEstado" class="text-xs text-gray-600 mt-1 text-center font-semibold">Nenhum Estado selecionado</p>
                 </div>
 
                 <!-- Input File Oculto e Área de Upload -->
@@ -264,25 +332,25 @@
                       </svg>
                     </div>
                     <div>
-                      <span class="text-sm font-bold text-black hover:underline">Clique para selecionar</span>
-                      <span class="text-sm text-black"> ou arraste a planilha</span>
+                      <span data-i18n="drop_click" class="text-sm font-bold text-black hover:underline">Clique para selecionar</span>
+                      <span data-i18n="drop_drag" class="text-sm text-gray-600"> ou arraste a planilha</span>
                     </div>
-                    <p class="text-xs text-gray-700 font-medium">Suporta arquivos Excel (.xlsx, .xls)</p>
+                    <p data-i18n="drop_support" class="text-xs text-gray-500 font-medium">Suporta arquivos Excel (.xlsx, .xls)</p>
                   </div>
                 </div>
               </div>
 
               <!-- Estrutura de colunas no rodapé do card -->
               <div class="mt-4 pt-3.5 border-t border-gray-200 space-y-2 bg-gray-50 -mx-5 -mb-5 p-4 rounded-b-xl text-xs text-black">
-                <div class="font-black flex items-center gap-1.5 text-purple-900 text-xs">
+                <div class="font-bold flex items-center gap-1.5 text-purple-700 text-xs">
                   <svg class="w-4 h-4 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                  <span>Padrão das Colunas da Planilha (.xlsx):</span>
+                  <span data-i18n="excel_cols_title">Padrão das Colunas da Planilha (.xlsx):</span>
                 </div>
-                <ul class="text-[11px] space-y-1.5 text-black font-medium pl-1">
-                  <li>• <strong>ID IBGE:</strong> Código oficial de 7 dígitos da cidade.</li>
-                  <li>• <strong>Estado & Município:</strong> Nomes da unidade federativa e município.</li>
-                  <li>• <strong>Marca:</strong> Marca 1 a 6 que atenderá a localidade.</li>
-                  <li>• <strong>Representante & Cor Hex:</strong> Nome do profissional e cor de destaque no mapa.</li>
+                <ul class="text-[11px] space-y-1.5 text-gray-600 font-medium pl-1">
+                  <li data-i18n-html="excel_col_1">• <strong>ID IBGE:</strong> Código oficial de 7 dígitos da cidade.</li>
+                  <li data-i18n-html="excel_col_2">• <strong>Estado & Município:</strong> Nomes da unidade federativa e município.</li>
+                  <li data-i18n-html="excel_col_3">• <strong>Marca:</strong> Marca 1 a 6 que atenderá a localidade.</li>
+                  <li data-i18n-html="excel_col_4">• <strong>Representante & Cor Hex:</strong> Nome do profissional e cor de destaque no mapa.</li>
                 </ul>
               </div>
 
@@ -292,19 +360,18 @@
 
       </div>
 
-      <!-- Coluna da Direita: Mapa e Controles Separados em 2 Grupos Claros -->
+      <!-- Coluna da Direita: Mapa e Controles -->
       <div class="lg:col-span-8 flex flex-col space-y-3">
         
-        <!-- Barra de Ferramentas Superior do Mapa: Uma embaixo da outra, com quebra 2x2 sem rolagem -->
         <div class="flex flex-col gap-2 w-full">
           
           <!-- LINHA 1: Camadas do Mapa de Fundo -->
           <div class="bg-white p-2 rounded-xl border border-gray-300 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1.5 w-full">
-            <span class="text-xs font-black text-black px-1 flex-shrink-0">
+            <span data-i18n="map_camada" class="text-xs font-bold text-black px-1 flex-shrink-0">
               Camada:
             </span>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full">
-              <button data-layer="esri" class="btn-tile-layer btn-tile-active py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
+              <button data-layer="esri" data-i18n="map_satelite" class="btn-tile-layer btn-tile-active py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
                 Satélite
               </button>
               <button data-layer="osm" class="btn-tile-layer btn-tile-inactive py-2 px-2 text-center rounded-lg font-bold text-xs transition-all w-full flex items-center justify-center">
@@ -321,39 +388,39 @@
 
           <!-- LINHA 2: Ajustes de Exibição & Tela Cheia -->
           <div class="bg-white p-2 rounded-xl border border-gray-300 shadow-xs flex flex-col sm:flex-row sm:items-center gap-1.5 w-full">
-            <span class="text-xs font-black text-black px-1 flex-shrink-0">
+            <span data-i18n="map_ajustes" class="text-xs font-bold text-black px-1 flex-shrink-0">
               Ajustes:
             </span>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 flex-1 w-full">
               <!-- Checkbox de Divisões Municipais -->
               <label class="flex items-center justify-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 py-2 px-2 rounded-lg transition-colors w-full text-xs">
-                <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-                <span class="truncate">Divisões</span>
+                <input id="checkDivisoesCidades" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300" />
+                <span data-i18n="map_divisoes" class="truncate">Divisões</span>
               </label>
 
               <!-- Checkbox de Rótulos no Mapa -->
-              <label class="flex items-center justify-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 py-2 px-2 rounded-lg transition-colors w-full text-xs" title="Exibir ou ocultar os rótulos de município e representante sobre as cidades">
-                <input id="checkRotulosMapa" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-                <span class="truncate">Rótulos</span>
+              <label class="flex items-center justify-center space-x-1.5 cursor-pointer font-bold text-black bg-gray-100 hover:bg-gray-200 py-2 px-2 rounded-lg transition-colors w-full text-xs">
+                <input id="checkRotulosMapa" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300" />
+                <span data-i18n="map_rotulos" class="truncate">Rótulos</span>
               </label>
 
               <!-- Botão Enquadrar Estado -->
-              <button id="btnResetZoom" title="Reenquadrar visão do Estado" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
+              <button id="btnResetZoom" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
-                <span>Enquadrar</span>
+                <span data-i18n="map_enquadrar">Enquadrar</span>
               </button>
 
               <!-- Botão Tela Cheia -->
-              <button id="btnFullScreen" title="Alternar Tela Cheia" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
+              <button id="btnFullScreen" class="py-2 px-2 text-black font-bold hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-1 border border-gray-200 w-full text-xs">
                 <svg id="iconExpand" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
                 <svg id="iconCompress" class="w-3.5 h-3.5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span id="textFullScreen">Tela Cheia</span>
+                <span id="textFullScreen" data-i18n="map_tela_cheia">Tela Cheia</span>
               </button>
             </div>
           </div>
@@ -364,99 +431,95 @@
         <div id="mapWrapper">
           <div id="map"></div>
 
-          <!-- Painel Flutuante Duplo em Tela Cheia no Canto Superior Direito (Fundo Branco Sólido Igual ao Botão) -->
+          <!-- Painel Flutuante Duplo em Tela Cheia -->
           <div id="floatingFullscreenToolbar" class="no-export hidden absolute top-3 right-3 z-30 flex items-start gap-2.5 pointer-events-auto">
             
-            <!-- Quadradinho 1: Configurações de Camadas do Mapa (Fundo Branco Sólido) -->
             <div class="fullscreen-card-white flex flex-col gap-1.5 min-w-[135px]">
               <div class="card-title">
-                <span>Camadas</span>
+                <span data-i18n="map_camadas">Camadas</span>
                 <span class="text-purple-600">🗺️</span>
               </div>
               <div class="flex flex-col gap-1">
-                <button data-layer="esri" class="btn-tile-layer btn-tile-active w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">Satélite</button>
+                <button data-layer="esri" data-i18n="map_satelite" class="btn-tile-layer btn-tile-active w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">Satélite</button>
                 <button data-layer="osm" class="btn-tile-layer btn-tile-inactive w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">OpenStreetMap</button>
                 <button data-layer="google" class="btn-tile-layer btn-tile-inactive w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">Google Maps</button>
                 <button data-layer="carto" class="btn-tile-layer btn-tile-inactive w-full text-left px-2.5 py-1.5 rounded-lg font-bold transition-all text-xs">CartoDB Light</button>
               </div>
             </div>
 
-            <!-- Quadradinho 2: Configurações Gerais e Ajustes do Mapa (Fundo Branco Sólido) -->
             <div class="fullscreen-card-white flex flex-col gap-1.5 min-w-[140px]">
               <div class="card-title">
-                <span>Ajustes</span>
+                <span data-i18n="map_ajustes_card">Ajustes</span>
                 <span class="text-purple-600">⚙️</span>
               </div>
               
               <div class="flex flex-col gap-1 text-xs">
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar divisões municipais">
-                  <input id="checkDivisoesFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-                  <span>Divisões</span>
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors">
+                  <input id="checkDivisoesFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300" />
+                  <span data-i18n="map_divisoes">Divisões</span>
                 </label>
 
-                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors" title="Exibir ou ocultar rótulos">
-                  <input id="checkRotulosFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300 focus:ring-purple-600" />
-                  <span>Rótulos</span>
+                <label class="flex items-center space-x-2 cursor-pointer font-bold text-black bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition-colors">
+                  <input id="checkRotulosFullscreen" type="checkbox" checked class="h-3.5 w-3.5 text-purple-600 rounded border-gray-300" />
+                  <span data-i18n="map_rotulos">Rótulos</span>
                 </label>
 
-                <button id="btnResetZoomFullscreen" title="Reenquadrar visão do Estado" class="w-full text-left px-2.5 py-1.5 text-black font-bold bg-white hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-300">
+                <button id="btnResetZoomFullscreen" class="w-full text-left px-2.5 py-1.5 text-black font-bold bg-white hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-1.5 border border-gray-300">
                   <svg class="w-3.5 h-3.5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
-                  <span>Enquadrar</span>
+                  <span data-i18n="map_enquadrar">Enquadrar</span>
                 </button>
 
                 <button id="btnExitFullScreenFloating" class="w-full btn-purple-primary font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm mt-0.5">
                   <svg class="w-3.5 h-3.5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Sair da Tela Cheia</span>
+                  <span data-i18n="map_sair_tela_cheia">Sair da Tela Cheia</span>
                 </button>
               </div>
             </div>
 
           </div>
 
-          <!-- Legenda do Mapa com Fundo 100% Branco Sólido (Igual aos Botões) -->
-          <div class="no-export map-legend-white absolute bottom-3 left-3 z-20 pointer-events-none flex flex-wrap items-center gap-3 text-[11px] font-black">
+          <!-- Legenda do Mapa -->
+          <div class="no-export map-legend-white absolute bottom-3 left-3 z-20 pointer-events-none flex flex-wrap items-center gap-3 text-[11px] font-bold">
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-purple-600 border border-purple-400 inline-block flex-shrink-0"></span>
-              <span class="text-black font-black">Borda Estado</span>
+              <span data-i18n="legend_borda_estado" class="text-black">Borda Estado</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-sm bg-cyan-500 border border-cyan-700 inline-block flex-shrink-0"></span>
-              <span class="text-black font-black">Divisões de Cidades</span>
+              <span data-i18n="legend_divisoes" class="text-black">Divisões de Cidades</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500 border border-amber-600 inline-block flex-shrink-0"></span>
-              <span class="text-black font-black">Edição</span>
+              <span data-i18n="legend_edicao" class="text-black">Edição</span>
             </div>
           </div>
         </div>
 
-        <!-- Barra de Status e Ações abaixo do Mapa: Métricas e Baixar Pacote -->
+        <!-- Barra de Status e Ações abaixo do Mapa -->
         <div class="bg-white rounded-xl p-3.5 sm:p-4 border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
           
-          <!-- Métricas com Letras e Números Pretos -->
           <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <div class="flex items-center bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-300 text-xs shadow-xs">
               <span class="w-2.5 h-2.5 rounded-full bg-purple-600 mr-2 inline-block"></span>
-              <span class="text-black font-bold mr-1.5">Municípios:</span>
-              <span id="metricTotalCidades" class="font-black text-black text-sm">0</span>
+              <span data-i18n="metric_municipios" class="text-gray-600 font-bold mr-1.5">Municípios:</span>
+              <span id="metricTotalCidades" class="font-extrabold font-mono text-black text-sm">0</span>
             </div>
             <div class="flex items-center bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-300 text-xs shadow-xs">
               <span class="w-2.5 h-2.5 rounded-full bg-purple-600 mr-2 inline-block"></span>
-              <span class="text-black font-bold mr-1.5">Representantes:</span>
-              <span id="metricTotalReps" class="font-black text-black text-sm">0</span>
+              <span data-i18n="metric_representantes" class="text-gray-600 font-bold mr-1.5">Representantes:</span>
+              <span id="metricTotalReps" class="font-extrabold font-mono text-black text-sm">0</span>
             </div>
           </div>
 
-          <!-- Botão Baixar Pacote (.zip) com Destaque Roxo e Ícone Branco -->
           <button id="btnBaixarPacote" class="w-full sm:w-auto flex items-center justify-center space-x-2 btn-purple-primary font-bold px-5 py-2.5 rounded-lg shadow-sm transition-all duration-150 transform active:scale-95 text-xs sm:text-sm">
             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            <span id="btnBaixarPacoteText">Baixar Pacote (.zip)</span>
+            <span id="btnBaixarPacoteText" data-i18n="btn_baixar_pacote">Baixar Pacote (.zip)</span>
           </button>
 
         </div>
@@ -468,37 +531,36 @@
     <!-- Tabela Inferior de Registros -->
     <div class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
       
-      <!-- Cabeçalho da Tabela e Barra de Busca -->
       <div class="p-4 sm:p-5 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50">
         <div>
-          <h2 class="text-base sm:text-lg font-black text-black flex items-center gap-2">
-            <span>Municípios e Representantes</span>
-            <span id="badgeTableCount" class="bg-purple-100 text-purple-900 border border-purple-200 text-xs px-2.5 py-0.5 rounded-full font-black">0 itens</span>
+          <h2 class="text-base sm:text-lg font-extrabold text-black flex items-center gap-2">
+            <span data-i18n="table_title">Municípios e Representantes</span>
+            <span id="badgeTableCount" class="bg-purple-100 text-purple-900 border border-purple-200 text-xs px-2.5 py-0.5 rounded-full font-bold">0 itens</span>
           </h2>
-          <p class="text-xs text-black font-semibold">Listagem completa</p>
+          <p data-i18n="table_subtitle" class="text-xs text-gray-600 font-medium">Listagem completa</p>
         </div>
 
         <!-- Filtro Rápido -->
         <div class="relative w-full sm:w-72">
-          <input id="inputBuscaTabela" type="text" placeholder="Filtrar por cidade, marca ou nome..." class="w-full text-xs bg-white border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-black font-semibold focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
+          <input id="inputBuscaTabela" type="text" data-i18n-placeholder="table_search_placeholder" placeholder="Filtrar por cidade, marca ou nome..." class="w-full text-xs bg-white border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-black font-semibold" />
           <svg class="w-4 h-4 text-gray-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
       </div>
 
-      <!-- Tabela Responsiva com Coluna Marca -->
+      <!-- Tabela Responsiva -->
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
-          <thead class="bg-gray-100 text-black font-black uppercase tracking-wider text-xs">
+          <thead class="bg-gray-100 text-black font-bold uppercase tracking-wider text-xs">
             <tr>
-              <th scope="col" class="py-3 px-4 text-center w-16">Nº</th>
-              <th scope="col" class="py-3 px-4 text-center w-20">Cor</th>
-              <th scope="col" class="py-3 px-4 text-center w-20">Estado</th>
-              <th scope="col" class="py-3 px-4 text-left">Município</th>
-              <th scope="col" class="py-3 px-4 text-center w-28">Marca</th>
-              <th scope="col" class="py-3 px-4 text-left">Representante</th>
-              <th scope="col" class="py-3 px-4 text-center w-28">Ações</th>
+              <th scope="col" data-i18n="th_num" class="py-3 px-4 text-center w-16">Nº</th>
+              <th scope="col" data-i18n="th_cor" class="py-3 px-4 text-center w-20">Cor</th>
+              <th scope="col" data-i18n="th_estado" class="py-3 px-4 text-center w-20">Estado</th>
+              <th scope="col" data-i18n="th_municipio" class="py-3 px-4 text-left">Município</th>
+              <th scope="col" data-i18n="th_marca" class="py-3 px-4 text-center w-28">Marca</th>
+              <th scope="col" data-i18n="th_representante" class="py-3 px-4 text-left">Representante</th>
+              <th scope="col" data-i18n="th_acoes" class="py-3 px-4 text-center w-28">Ações</th>
             </tr>
           </thead>
           <tbody id="tabelaCorpo" class="bg-white divide-y divide-gray-200">
@@ -512,55 +574,55 @@
   </main>
 
   <!-- Modal para Gerenciar Nomes das 6 Marcas -->
-  <div id="modalMarcas" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+  <div id="modalMarcas" class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-          Personalizar Nomes das 6 Marcas
+          <span data-i18n="modal_marcas_title">Personalizar Nomes das 6 Marcas</span>
         </h3>
         <button id="btnFecharModalMarcas" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
       </div>
 
-      <p class="text-xs text-gray-600">Defina os nomes das marcas da sua operação. Essas alterações refletem no mapa, na tabela e nos relatórios exportados.</p>
+      <p data-i18n="modal_marcas_desc" class="text-xs text-gray-600">Defina os nomes das marcas da sua operação. Essas alterações refletem no mapa, na tabela e nos relatórios exportados.</p>
 
       <div class="space-y-3">
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-1 w-16 text-center">Marca 1</span>
-          <input id="inputNomeMarca1" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca1" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-2 w-16 text-center">Marca 2</span>
-          <input id="inputNomeMarca2" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca2" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-3 w-16 text-center">Marca 3</span>
-          <input id="inputNomeMarca3" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca3" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-4 w-16 text-center">Marca 4</span>
-          <input id="inputNomeMarca4" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca4" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-5 w-16 text-center">Marca 5</span>
-          <input id="inputNomeMarca5" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca5" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
         <div class="flex items-center gap-2">
           <span class="rep-brand-badge brand-6 w-16 text-center">Marca 6</span>
-          <input id="inputNomeMarca6" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-purple-600 focus:outline-none font-bold text-black" />
+          <input id="inputNomeMarca6" type="text" class="flex-1 text-xs border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-black" />
         </div>
       </div>
 
       <div class="pt-2 flex justify-end gap-2">
-        <button id="btnSalvarNomesMarcas" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button id="btnSalvarNomesMarcas" data-i18n="btn_salvar_nomes" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Salvar Nomes
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Sugestão de Divisões de Representantes (Em Desenvolvimento) -->
-  <div id="modalSugestoes" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+  <!-- Modal: Sugestão de Divisões de Representantes -->
+  <div id="modalSugestoes" class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2.5">
@@ -568,31 +630,31 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-gray-900">Sugestão de Divisões Territoriais</h3>
-            <span class="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200">Em Desenvolvimento</span>
+            <h3 data-i18n="modal_sug_title" class="text-base font-bold text-gray-900">Sugestão de Divisões Territoriais</h3>
+            <span data-i18n="modal_sug_badge" class="text-[10px] font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full border border-purple-200">Em Desenvolvimento</span>
           </div>
         </div>
         <button id="btnFecharModalSugestoes" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">&times;</button>
       </div>
 
       <div class="space-y-3 text-xs text-gray-700">
-        <p class="text-gray-900 font-bold">
+        <p data-i18n="modal_sug_intro" class="text-gray-900 font-bold">
           Estamos desenvolvendo um algoritmo de agrupamento geográfico inteligente:
         </p>
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-2">
           <div class="flex items-start gap-2">
             <span class="text-purple-600 font-bold">•</span>
-            <span><strong>Agrupamento por Proximidade:</strong> Divisão em carteiras de municípios vizinhos para otimizar tempo de deslocamento.</span>
+            <span data-i18n-html="modal_sug_item1"><strong>Agrupamento por Proximidade:</strong> Divisão em carteiras de municípios vizinhos para otimizar tempo de deslocamento.</span>
           </div>
           <div class="flex items-start gap-2">
             <span class="text-purple-600 font-bold">•</span>
-            <span><strong>Balanceamento Populacional:</strong> Distribuição equilibrada de cidades por potencial populacional.</span>
+            <span data-i18n-html="modal_sug_item2"><strong>Balanceamento Populacional:</strong> Distribuição equilibrada de cidades por potencial populacional.</span>
           </div>
         </div>
       </div>
 
       <div class="pt-2 flex justify-end">
-        <button onclick="document.getElementById('modalSugestoes').classList.add('hidden')" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button onclick="document.getElementById('modalSugestoes').classList.add('hidden')" data-i18n="btn_fechar" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Fechar
         </button>
       </div>
@@ -600,7 +662,7 @@
   </div>
 
   <!-- Modal: Ajuda (Guia de Uso Completo do Site) -->
-  <div id="modalAjuda" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+  <div id="modalAjuda" class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-gray-200 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-2.5">
@@ -608,8 +670,8 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-gray-900">Guia Prático de Utilização</h3>
-            <p class="text-xs text-gray-500 font-medium">Aprenda a operar o gestor territorial de ponta a ponta</p>
+            <h3 data-i18n="modal_ajuda_title" class="text-base font-bold text-gray-900">Guia Prático de Utilização</h3>
+            <p data-i18n="modal_ajuda_sub" class="text-xs text-gray-500 font-medium">Aprenda a operar o gestor territorial de ponta a ponta</p>
           </div>
         </div>
         <button id="btnFecharModalAjuda" class="text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none">&times;</button>
@@ -620,59 +682,59 @@
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
             <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">1</span>
-            Seleção do Estado e Divisões Municipais
+            <span data-i18n="ajuda_1_title">Seleção do Estado e Divisões Municipais</span>
           </h4>
-          <p>Selecione um Estado no menu. O mapa enquadra a região e traça as <strong>fronteiras do Estado</strong> e todas as <strong>divisões de cidades</strong> em cores de alto contraste.</p>
+          <p data-i18n-html="ajuda_1_desc">Selecione um Estado no menu. O mapa enquadra a região e traça as <strong>fronteiras do Estado</strong> e todas as <strong>divisões de cidades</strong> em cores de alto contraste.</p>
         </div>
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
             <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">2</span>
-            Cadastro com 1 Clique Direto no Mapa
+            <span data-i18n="ajuda_2_title">Cadastro com 1 Clique Direto no Mapa</span>
           </h4>
-          <p>Você pode selecionar cidades pelo formulário ou <strong>clicando diretamente sobre a cidade no mapa</strong>.</p>
+          <p data-i18n-html="ajuda_2_desc">Você pode selecionar cidades pelo formulário ou <strong>clicando diretamente sobre a cidade no mapa</strong>.</p>
         </div>
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
             <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">3</span>
-            Múltiplas Marcas por Município
+            <span data-i18n="ajuda_3_title">Múltiplas Marcas por Município</span>
           </h4>
-          <p>Cada município aceita até 6 marcas. Cidades com mais de uma marca exibem <strong>listras diagonais</strong> com as cores correspondentes no mapa.</p>
+          <p data-i18n-html="ajuda_3_desc">Cada município aceita até 6 marcas. Cidades com mais de uma marca exibem <strong>listras diagonais</strong> com as cores correspondentes no mapa.</p>
         </div>
 
         <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200 space-y-1">
           <h4 class="font-bold text-gray-900 flex items-center gap-1.5 text-sm">
             <span class="w-5 h-5 rounded-full bg-purple-700 text-white flex items-center justify-center text-xs font-bold">4</span>
-            Exportação do Pacote (.zip)
+            <span data-i18n="ajuda_4_title">Exportação do Pacote (.zip)</span>
           </h4>
-          <p>O botão <strong>Baixar Pacote (.zip)</strong> sempre fotografa o Estado inteiro perfeitamente enquadrado e gera:</p>
+          <p data-i18n-html="ajuda_4_desc">O botão <strong>Baixar Pacote (.zip)</strong> sempre fotografa o Estado inteiro perfeitamente enquadrado e gera:</p>
           <ul class="list-disc list-inside space-y-0.5 pl-2 text-gray-800 font-medium">
-            <li><strong>mapa_representantes.png:</strong> Foto do Estado em alta resolução.</li>
-            <li><strong>tabela_representantes.xlsx:</strong> Planilha com cores em ARGB.</li>
-            <li><strong>relatorio_representantes.pdf:</strong> PDF de 2 páginas (Página 1 com o Mapa Colorido e Página 2 com a Legenda Completa).</li>
+            <li data-i18n-html="ajuda_4_li1"><strong>mapa_representantes.png:</strong> Foto do Estado em alta resolução.</li>
+            <li data-i18n-html="ajuda_4_li2"><strong>tabela_representantes.xlsx:</strong> Planilha com cores em ARGB.</li>
+            <li data-i18n-html="ajuda_4_li3"><strong>relatorio_representantes.pdf:</strong> PDF de 2 páginas (Página 1 com o Mapa Colorido e Página 2 com a Legenda Completa).</li>
           </ul>
         </div>
 
       </div>
 
       <div class="pt-2 flex justify-end">
-        <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
+        <button onclick="document.getElementById('modalAjuda').classList.add('hidden')" data-i18n="btn_fechar_guia" class="btn-purple-primary font-bold px-4 py-2 rounded-lg text-xs transition-colors">
           Fechar Guia
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal: Editar Representante (Nome e Cor Institucional) -->
-  <div id="modalAlterarCor" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+  <!-- Modal: Editar Representante -->
+  <div id="modalAlterarCor" class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3">
         <div class="flex items-center gap-3">
-          <div id="modalCorPreviewBadge" class="w-9 h-9 rounded-xl shadow-xs border border-gray-300 flex items-center justify-center flex-shrink-0" style="background-color: #7c3aed;"></div>
+          <div id="modalCorPreviewBadge" class="w-9 h-9 rounded-xl shadow-xs border border-gray-300 flex items-center justify-center flex-shrink-0" style="background-color: #2563eb;"></div>
           <div>
-            <h3 class="text-sm sm:text-base font-black text-black">Editar Representante</h3>
-            <p id="modalCorNomeRep" class="text-xs font-bold text-purple-700 truncate max-w-[220px]">Alteração de Nome e Cor</p>
+            <h3 data-i18n="modal_cor_title" class="text-sm sm:text-base font-extrabold text-black">Editar Representante</h3>
+            <p id="modalCorNomeRep" data-i18n="modal_cor_sub_default" class="text-xs font-bold text-purple-700 truncate max-w-[220px]">Alteração de Nome e Cor</p>
           </div>
         </div>
         <button id="btnFecharModalCor" class="text-gray-400 hover:text-black text-2xl font-bold leading-none p-1">&times;</button>
@@ -680,28 +742,26 @@
 
       <!-- Campo de Alteração de Nome -->
       <div>
-        <label for="inputModalNomeRep" class="block text-xs font-black text-black mb-1">Nome do Representante:</label>
+        <label for="inputModalNomeRep" data-i18n="modal_cor_label_nome" class="block text-xs font-bold text-black mb-1">Nome do Representante:</label>
         <div class="relative">
-          <input id="inputModalNomeRep" type="text" maxlength="80" class="w-full text-xs font-bold bg-white border border-gray-300 rounded-lg px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-purple-600 shadow-xs" placeholder="Digite o nome do representante..." />
+          <input id="inputModalNomeRep" type="text" maxlength="80" data-i18n-placeholder="modal_cor_placeholder_nome" class="w-full text-xs font-bold bg-white border border-gray-300 rounded-lg px-3 py-2 text-black shadow-xs" placeholder="Digite o nome do representante..." />
         </div>
-        <p id="modalQtdCidadesInfo" class="text-[11px] text-gray-500 font-semibold mt-1">Este representante atende X município(s).</p>
+        <p id="modalQtdCidadesInfo" class="text-[11px] text-gray-500 font-semibold mt-1"></p>
       </div>
 
-      <!-- Paleta de Cores Recomendadas (Toque Fácil) -->
+      <!-- Paleta de Cores Recomendadas -->
       <div>
-        <label class="block text-xs font-black text-black mb-1.5">Cor Institucional (1 Toque):</label>
-        <div id="modalCorPaletaPredefinida" class="grid grid-cols-6 gap-2">
-          <!-- Gerado via JS com 12 cores vibrantes corporativas -->
-        </div>
+        <label data-i18n="modal_cor_label_paleta" class="block text-xs font-bold text-black mb-1.5">Cor Institucional (1 Toque):</label>
+        <div id="modalCorPaletaPredefinida" class="grid grid-cols-6 gap-2"></div>
       </div>
 
       <!-- Seletor Livre e Código Hexadecimal -->
       <div>
-        <label class="block text-xs font-black text-black mb-1.5">Ou personalize com a cor exata:</label>
+        <label data-i18n="modal_cor_label_custom" class="block text-xs font-bold text-black mb-1.5">Ou personalize com a cor exata:</label>
         <div class="flex items-center space-x-2.5">
-          <input id="inputModalCor" type="color" value="#7C3AED" class="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
-          <input id="inputModalCorHex" type="text" value="#7C3AED" maxlength="7" class="flex-1 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-3 py-2 text-center text-black font-black focus:outline-none focus:ring-2 focus:ring-purple-600" />
-          <button id="btnModalCorAleatoria" type="button" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
+          <input id="inputModalCor" type="color" value="#2563EB" class="w-12 h-10 rounded-lg border border-gray-300 cursor-pointer p-0.5 bg-white shadow-xs" />
+          <input id="inputModalCorHex" type="text" value="#2563EB" maxlength="7" class="flex-1 text-xs font-mono uppercase bg-white border border-gray-300 rounded-lg px-3 py-2 text-center text-black font-bold" />
+          <button id="btnModalCorAleatoria" type="button" data-i18n-title="title_cor_aleatoria" title="Gerar cor aleatória" class="p-2 text-black hover:text-purple-700 hover:bg-purple-50 border border-gray-300 rounded-lg transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -711,26 +771,26 @@
 
       <!-- Ações -->
       <div class="pt-3 flex items-center justify-end gap-2 border-t border-gray-100">
-        <button id="btnCancelarModalCor" type="button" class="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 border border-gray-300 transition-colors">
+        <button id="btnCancelarModalCor" type="button" data-i18n="btn_cancelar" class="px-4 py-2 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-100 border border-gray-300 transition-colors">
           Cancelar
         </button>
         <button id="btnSalvarModalCor" type="button" class="btn-purple-primary font-bold px-5 py-2 rounded-lg text-xs flex items-center gap-1.5 shadow-sm">
           <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
-          <span>Salvar Alterações</span>
+          <span data-i18n="btn_salvar_alteracoes">Salvar Alterações</span>
         </button>
       </div>
     </div>
   </div>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-black font-semibold">
-    <p>Gestor Territorial de Representantes &bull; Dados geográficos providos pelo IBGE &bull; Memória volátil (100% em memória)</p>
+  <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-600 font-semibold">
+    <p data-i18n="footer_text">Gestor Territorial de Representantes &bull; Dados geográficos providos pelo IBGE &bull; Memória volátil (100% em memória)</p>
   </footer>
 
   <!-- Modal de Progresso da Importação em Massa -->
-  <div id="modalProgresso" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
+  <div id="modalProgresso" class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter blur-xs z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-4">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
@@ -740,8 +800,8 @@
           </svg>
         </div>
         <div>
-          <h3 class="text-base font-bold text-gray-900">Processando Importação</h3>
-          <p class="text-xs text-gray-500 font-medium">Consultando malhas cartográficas no IBGE...</p>
+          <h3 data-i18n="modal_prog_title" class="text-base font-bold text-gray-900">Processando Importação</h3>
+          <p data-i18n="modal_prog_sub" class="text-xs text-gray-500 font-medium">Consultando malhas cartográficas no IBGE...</p>
         </div>
       </div>
 
@@ -755,7 +815,7 @@
         </div>
       </div>
 
-      <p class="text-xs text-gray-500 text-center font-medium">Isso pode levar alguns segundos dependendo da quantidade de cidades.</p>
+      <p data-i18n="modal_prog_note" class="text-xs text-gray-500 text-center font-medium">Isso pode levar alguns segundos dependendo da quantidade de cidades.</p>
     </div>
   </div>
 
@@ -763,6 +823,7 @@
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
   <!-- Scripts Modulares da Aplicação -->
+  <script src="js/i18n.js"></script>
   <script src="js/ibge.js"></script>
   <script src="js/map.js"></script>
   <script src="js/excel.js"></script>

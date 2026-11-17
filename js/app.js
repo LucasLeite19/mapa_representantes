@@ -22,13 +22,21 @@ const App = (() => {
     itensCadastrados: [],
     nextSeqId: 1,
     previewGeoJson: null,
-    isExporting: false
+    isExporting: false,
+    abaAtiva: 'manual'
   };
+
+  function t(key, params = {}) {
+    return (window.I18nManager && window.I18nManager.t) ? window.I18nManager.t(key, params) : key;
+  }
 
   /**
    * Inicialização do Sistema
    */
   async function init() {
+    if (window.I18nManager) {
+      window.I18nManager.init();
+    }
     MapManager.init();
     bindEvents();
     renderSelectMarcas();
@@ -37,6 +45,51 @@ const App = (() => {
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
+  }
+
+  function onLanguageChanged() {
+    setAbaAtiva(state.abaAtiva || 'manual');
+
+    // Atualiza o primeiro item de selectEstado
+    const selectEstado = document.getElementById('selectEstado');
+    if (selectEstado && selectEstado.options.length > 0 && selectEstado.options[0].value === '') {
+      selectEstado.options[0].textContent = t('opt_selecione_estado');
+    }
+
+    // Atualiza o selectMunicipio e labels
+    const selectMunicipio = document.getElementById('selectMunicipio');
+    const labelTotal = document.getElementById('labelTotalMunicipios');
+    const infoModelo = document.getElementById('infoModeloEstado');
+
+    if (!state.estadoSelecionado) {
+      if (selectMunicipio) {
+        selectMunicipio.innerHTML = `<option value="">${t('opt_selecione_estado_primeiro')}</option>`;
+      }
+      if (infoModelo) infoModelo.textContent = t('info_nenhum_estado');
+      if (labelTotal) labelTotal.textContent = '';
+    } else {
+      if (infoModelo) {
+        infoModelo.textContent = t('info_estado_selecionado', {
+          nome: state.estadoSelecionado.nome,
+          sigla: state.estadoSelecionado.sigla
+        });
+      }
+      if (labelTotal && state.municipiosAtuais) {
+        labelTotal.textContent = t('label_qtd_municipios', { n: state.municipiosAtuais.length });
+      }
+      atualizarSelectMunicipios();
+    }
+
+    renderSelectMarcas(selectMunicipio ? selectMunicipio.value : null);
+    renderTabela();
+    atualizarResumoLateral();
+
+    // Atualiza popups das cidades cadastradas no mapa
+    const cidadesUnicas = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+    cidadesUnicas.forEach(mId => {
+      const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+      MapManager.syncMunicipalityLayer(mId, null, itensDaCidade);
+    });
   }
 
   /**
@@ -62,7 +115,7 @@ const App = (() => {
 
       if (marcasOcupadas.has(marca.id)) {
         opt.disabled = true;
-        opt.textContent = `${marca.nome} (Já cadastrada nesta cidade)`;
+        opt.textContent = t('opt_marca_ocupada', { nome: marca.nome });
       } else {
         opt.textContent = marca.nome;
       }
@@ -79,6 +132,7 @@ const App = (() => {
    * Alterna entre modo manual e modo importar excel
    */
   function setAbaAtiva(modo) {
+    state.abaAtiva = modo;
     const contentManual = document.getElementById('contentManual');
     const contentMassa = document.getElementById('contentMassa');
     const navBtnManual = document.getElementById('navBtnManual');
@@ -91,14 +145,20 @@ const App = (() => {
     if (modo === 'manual') {
       if (contentManual) contentManual.classList.remove('hidden');
       if (contentMassa) contentMassa.classList.add('hidden');
-      if (cardHeaderTitle) cardHeaderTitle.textContent = 'Cadastro Manual de Representante';
+      if (cardHeaderTitle) {
+        cardHeaderTitle.setAttribute('data-i18n', 'card_title_manual');
+        cardHeaderTitle.textContent = t('card_title_manual');
+      }
 
       if (navBtnManual) navBtnManual.className = activeClasses;
       if (navBtnExcel) navBtnExcel.className = inactiveClasses;
     } else {
       if (contentMassa) contentMassa.classList.remove('hidden');
       if (contentManual) contentManual.classList.add('hidden');
-      if (cardHeaderTitle) cardHeaderTitle.textContent = 'Importação em Massa via Excel';
+      if (cardHeaderTitle) {
+        cardHeaderTitle.setAttribute('data-i18n', 'card_title_massa');
+        cardHeaderTitle.textContent = t('card_title_massa');
+      }
 
       if (navBtnExcel) navBtnExcel.className = activeClasses;
       if (navBtnManual) navBtnManual.className = inactiveClasses;
@@ -313,7 +373,7 @@ const App = (() => {
       const novoNome = inputNome ? inputNome.value.trim() : repSelecionadoParaCor;
 
       if (!novoNome) {
-        showToast('O nome do representante não pode ficar em branco.', 'warning');
+        showToast(t('toast_nome_vazio'), 'warning');
         if (inputNome) inputNome.focus();
         return;
       }
@@ -346,21 +406,20 @@ const App = (() => {
     });
 
     // Alternância do título da aba ao sair da página (atrai o usuário de volta)
-    const originalPageTitle = document.title;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        document.title = '📍 Voltar para a página | Gestor de Representantes';
+        document.title = t('page_title_away');
       } else {
-        document.title = originalPageTitle;
+        document.title = t('page_title');
       }
     });
 
     window.addEventListener('blur', () => {
-      document.title = '📍 Voltar para a página | Gestor de Representantes';
+      document.title = t('page_title_away');
     });
 
     window.addEventListener('focus', () => {
-      document.title = originalPageTitle;
+      document.title = t('page_title');
     });
 
     // Alerta de proteção para dados em memória volátil antes de fechar a aba
@@ -450,7 +509,7 @@ const App = (() => {
         renderSelectMarcas(selectMun ? selectMun.value : null);
         renderTabela();
         modalMarcas.classList.add('hidden');
-        showToast('Nomes das marcas atualizados com sucesso!', 'success');
+        showToast(t('toast_marcas_ok'), 'success');
       });
     }
   }
@@ -464,7 +523,7 @@ const App = (() => {
       const estados = await IBGEService.getEstados();
       state.estados = estados;
 
-      select.innerHTML = '<option value="">Selecione um Estado...</option>';
+      select.innerHTML = `<option value="">${t('opt_selecione_estado')}</option>`;
       estados.forEach(uf => {
         const opt = document.createElement('option');
         opt.value = uf.id;
@@ -475,8 +534,8 @@ const App = (() => {
       });
     } catch (err) {
       console.error(err);
-      select.innerHTML = '<option value="">Erro ao carregar Estados</option>';
-      showToast('Falha ao carregar estados do IBGE.', 'error');
+      select.innerHTML = `<option value="">${t('opt_erro_estados')}</option>`;
+      showToast(t('toast_erro_estados'), 'error');
     }
   }
 
@@ -496,10 +555,10 @@ const App = (() => {
       state.estadoSelecionado = null;
       state.municipiosAtuais = [];
       state.estadoBounds = null;
-      selectMunicipio.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
+      selectMunicipio.innerHTML = `<option value="">${t('opt_selecione_estado_primeiro')}</option>`;
       selectMunicipio.disabled = true;
       labelTotal.textContent = '';
-      infoModelo.textContent = 'Nenhum Estado selecionado';
+      infoModelo.textContent = t('info_nenhum_estado');
       MapManager.resetToBrasil();
       renderSelectMarcas(null);
       atualizarResumoLateral();
@@ -508,7 +567,7 @@ const App = (() => {
 
     const uf = state.estados.find(e => String(e.id) === String(estadoId));
     state.estadoSelecionado = uf;
-    infoModelo.textContent = `Estado Selecionado: ${uf.nome} (${uf.sigla})`;
+    infoModelo.textContent = t('info_estado_selecionado', { nome: uf.nome, sigla: uf.sigla });
 
     const bounds = IBGEService.getEstadoBounds(uf.sigla);
     if (bounds) {
@@ -517,14 +576,14 @@ const App = (() => {
     }
 
     selectMunicipio.disabled = true;
-    selectMunicipio.innerHTML = '<option value="">Carregando municípios...</option>';
-    labelTotal.textContent = 'Carregando malhas...';
+    selectMunicipio.innerHTML = `<option value="">${t('opt_carregando_municipios')}</option>`;
+    labelTotal.textContent = t('label_carregando_malhas');
 
     try {
       const municipios = await IBGEService.getMunicipios(uf.id);
       state.municipiosAtuais = municipios;
       atualizarSelectMunicipios();
-      labelTotal.textContent = `${municipios.length} municípios`;
+      labelTotal.textContent = t('label_qtd_municipios', { n: municipios.length });
 
       const municipiosMap = new Map();
       municipios.forEach(m => municipiosMap.set(String(m.id), m.nome));
@@ -552,8 +611,8 @@ const App = (() => {
 
     } catch (err) {
       console.error(err);
-      selectMunicipio.innerHTML = '<option value="">Erro ao carregar municípios</option>';
-      showToast('Falha ao carregar dados do IBGE para o estado.', 'error');
+      selectMunicipio.innerHTML = `<option value="">${t('opt_erro_municipios')}</option>`;
+      showToast(t('toast_erro_ibge_uf'), 'error');
     } finally {
       selectMunicipio.disabled = false;
     }
@@ -562,7 +621,7 @@ const App = (() => {
   function atualizarSelectMunicipios() {
     const select = document.getElementById('selectMunicipio');
     const valorAnterior = select.value;
-    select.innerHTML = '<option value="">Selecione um Município ou clique no mapa...</option>';
+    select.innerHTML = `<option value="">${t('opt_selecione_municipio')}</option>`;
 
     const contagemPorCidade = new Map();
     state.itensCadastrados.forEach(it => {
@@ -579,9 +638,9 @@ const App = (() => {
       const qtdMarcas = contagemPorCidade.get(mId) || 0;
       if (qtdMarcas >= 6) {
         opt.disabled = true;
-        opt.textContent = `${m.nome} (6/6 marcas - Esgotado)`;
+        opt.textContent = t('opt_cidade_esgotada', { nome: m.nome });
       } else if (qtdMarcas > 0) {
-        opt.textContent = `${m.nome} (${qtdMarcas}/6 marcas cadastradas)`;
+        opt.textContent = t('opt_cidade_parcial', { nome: m.nome, n: qtdMarcas });
       } else {
         opt.textContent = m.nome;
       }
@@ -616,17 +675,17 @@ const App = (() => {
       ).size;
 
       if (cardCidadesAtivas) {
-        cardCidadesAtivas.textContent = `${cadastradasNoEstado} ${cadastradasNoEstado === 1 ? 'cadastrada' : 'cadastradas'}`;
+        cardCidadesAtivas.textContent = t(cadastradasNoEstado === 1 ? 'summary_cadastrada_one' : 'summary_cadastrada_other', { n: cadastradasNoEstado });
       }
       if (cardCidadesDisponiveis) {
         const livres = Math.max(0, totalDoEstado - cadastradasNoEstado);
-        cardCidadesDisponiveis.textContent = totalDoEstado > 0 ? `${livres} de ${totalDoEstado} disponíveis` : '-';
+        cardCidadesDisponiveis.textContent = totalDoEstado > 0 ? t('summary_disponiveis', { livres, total: totalDoEstado }) : '-';
       }
     } else {
-      cardEstadoAtivo.textContent = 'Nenhum selecionado';
+      cardEstadoAtivo.textContent = t('summary_nenhum_selecionado');
       if (cardCidadesAtivas) {
         const total = new Set(state.itensCadastrados.map(it => String(it.municipioId))).size;
-        cardCidadesAtivas.textContent = `${total} ${total === 1 ? 'cidade cadastrada' : 'cidades cadastradas'}`;
+        cardCidadesAtivas.textContent = t(total === 1 ? 'summary_cidade_cadastrada_one' : 'summary_cidade_cadastrada_other', { n: total });
       }
       if (cardCidadesDisponiveis) {
         cardCidadesDisponiveis.textContent = '-';
@@ -663,7 +722,7 @@ const App = (() => {
       MapManager.showPreview(geoJson);
     } catch (err) {
       console.error(err);
-      showToast('Não foi possível obter o contorno do município no IBGE.', 'warning');
+      showToast(t('toast_erro_contorno'), 'warning');
     } finally {
       helper.classList.add('hidden');
     }
@@ -683,19 +742,19 @@ const App = (() => {
     const cor = inputCor.value.toUpperCase();
 
     if (!estadoId) {
-      showToast('Selecione um Estado.', 'warning');
+      showToast(t('toast_sel_estado'), 'warning');
       return;
     }
     if (!municipioId) {
-      showToast('Selecione um Município ou clique diretamente no mapa.', 'warning');
+      showToast(t('toast_sel_municipio'), 'warning');
       return;
     }
     if (!marcaId) {
-      showToast('Selecione uma Marca.', 'warning');
+      showToast(t('toast_sel_marca'), 'warning');
       return;
     }
     if (!nome) {
-      showToast('Digite o nome do Representante.', 'warning');
+      showToast(t('toast_digite_rep'), 'warning');
       inputRep.focus();
       return;
     }
@@ -704,7 +763,7 @@ const App = (() => {
       it => String(it.municipioId) === String(municipioId) && Number(it.marcaId) === marcaId
     );
     if (marcaJaExiste) {
-      showToast('Esta marca já está cadastrada para este município!', 'warning');
+      showToast(t('toast_marca_existe'), 'warning');
       return;
     }
 
@@ -712,7 +771,7 @@ const App = (() => {
       it => String(it.municipioId) === String(municipioId)
     ).length;
     if (totalNestaCidade >= 6) {
-      showToast('Limite máximo de 6 marcas por município atingido!', 'warning');
+      showToast(t('toast_limite_marcas'), 'warning');
       return;
     }
 
@@ -733,7 +792,7 @@ const App = (() => {
       try {
         geoJson = await IBGEService.getMalhaMunicipio(municipioId);
       } catch (e) {
-        showToast('Erro ao obter malha do município no IBGE.', 'error');
+        showToast(t('toast_erro_malha'), 'error');
         return;
       }
     }
@@ -780,9 +839,9 @@ const App = (() => {
 
   // 12 cores recomendadas vibrantes e corporativas para toque rápido
   const CORES_RECOMENDADAS = [
-    '#7C3AED', '#2563EB', '#059669', '#DC2626',
-    '#D97706', '#DB2777', '#0891B2', '#4F46E5',
-    '#EA580C', '#0D9488', '#65A30D', '#9333EA'
+    '#2563EB', '#059669', '#DC2626', '#D97706',
+    '#0891B2', '#4F46E5', '#DB2777', '#EA580C',
+    '#0D9488', '#65A30D', '#7C3AED', '#334155'
   ];
 
   let repSelecionadoParaCor = null;
@@ -810,25 +869,24 @@ const App = (() => {
       inputNome.value = nomeRep;
     }
     if (txtSub) {
-      txtSub.textContent = `Atualmente: ${nomeRep}`;
+      txtSub.textContent = t('modal_cor_sub_atual', { nome: nomeRep });
     }
     if (infoCidades) {
-      infoCidades.textContent = `Este representante atende ${totalCidades} ${totalCidades === 1 ? 'município' : 'municípios'}. O novo nome e cor serão aplicados a todas as ocorrências.`;
+      infoCidades.textContent = t(totalCidades === 1 ? 'modal_cor_info_one' : 'modal_cor_info_other', { n: totalCidades });
     }
 
-    const corInicial = (corAtual && corAtual.startsWith('#')) ? corAtual.toUpperCase() : '#7C3AED';
+    const corInicial = (corAtual && corAtual.startsWith('#')) ? corAtual.toUpperCase() : '#2563EB';
     inputCor.value = corInicial;
     inputHex.value = corInicial;
     badge.style.backgroundColor = corInicial;
 
-    // Gerar paleta de 12 botões de 1 toque (fácil no mobile e tablet)
     paleta.innerHTML = '';
     CORES_RECOMENDADAS.forEach(c => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'w-9 h-9 rounded-xl border border-gray-300 shadow-xs transition-transform hover:scale-110 active:scale-95 focus:ring-2 focus:ring-purple-600 focus:outline-none';
+      btn.className = 'w-9 h-9 rounded-xl border border-gray-300 shadow-xs transition-transform hover:scale-110 active:scale-95 focus:outline-none';
       btn.style.backgroundColor = c;
-      btn.title = `Cor ${c}`;
+      btn.title = c;
       btn.addEventListener('click', () => {
         inputCor.value = c;
         inputHex.value = c.toUpperCase();
@@ -860,7 +918,7 @@ const App = (() => {
     if (!nomeAntigo || !novoNome) return;
     const antigoLower = nomeAntigo.trim().toLowerCase();
     const nomeLimpo = novoNome.trim();
-    const corLimpa = (novaCor && novaCor.startsWith('#')) ? novaCor.toUpperCase() : '#7C3AED';
+    const corLimpa = (novaCor && novaCor.startsWith('#')) ? novaCor.toUpperCase() : '#2563EB';
 
     let atualizados = 0;
     const cidadesAfetadas = new Set();
@@ -896,7 +954,13 @@ const App = (() => {
       atualizarResumoLateral();
       atualizarMetricas();
 
-      showToast(`Representante atualizado para "${nomeLimpo}" (${cidadesAfetadas.size} ${cidadesAfetadas.size === 1 ? 'município' : 'municípios'} no mapa)!`, 'success');
+      showToast(
+        t(cidadesAfetadas.size === 1 ? 'toast_rep_atualizado_one' : 'toast_rep_atualizado_other', {
+          nome: nomeLimpo,
+          n: cidadesAfetadas.size
+        }),
+        'success'
+      );
     }
   }
 
@@ -953,15 +1017,16 @@ const App = (() => {
       );
     }
 
-    badgeCount.textContent = `${state.itensCadastrados.length} ${state.itensCadastrados.length === 1 ? 'item' : 'itens'}`;
+    const totalLen = state.itensCadastrados.length;
+    badgeCount.textContent = t(totalLen === 1 ? 'table_count_one' : 'table_count_other', { n: totalLen });
     atualizarResumoLateral();
     atualizarDatalist();
 
     if (itens.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="py-10 text-center text-gray-400">
-            ${state.itensCadastrados.length === 0 ? 'Nenhum município cadastrado ainda.' : 'Nenhum registro encontrado para a busca.'}
+          <td colspan="7" class="py-10 text-center text-gray-500 font-medium">
+            ${totalLen === 0 ? t('table_empty_no_items') : t('table_empty_no_results')}
           </td>
         </tr>
       `;
@@ -973,25 +1038,26 @@ const App = (() => {
     itens.forEach(item => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-gray-50 transition-colors border-b border-gray-100';
+      const editTitle = t('title_editar_rep', { nome: escapeHtml(item.representante) });
 
       tr.innerHTML = `
         <td class="py-3 px-4 text-center font-bold text-black">
-          <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-black bg-gray-100 text-black border border-gray-300">
+          <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-gray-100 text-black border border-gray-300">
             Nº ${item.seqId}
           </span>
         </td>
         <td class="py-3 px-4 text-center">
-          <button type="button" class="btn-abrir-modal-cor inline-flex items-center justify-center space-x-2 py-1 px-2.5 rounded-lg hover:bg-purple-50 border border-gray-300 hover:border-purple-600 transition-all group" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Clique para alterar a cor do representante ${escapeHtml(item.representante)}">
+          <button type="button" class="btn-abrir-modal-cor inline-flex items-center justify-center space-x-2 py-1 px-2.5 rounded-lg hover:bg-purple-50 border border-gray-300 hover:border-purple-600 transition-all group" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="${editTitle}">
             <div class="w-5 h-5 rounded-md shadow-xs border border-black/20 flex-shrink-0 transition-transform group-hover:scale-110" style="background-color: ${item.cor};"></div>
             <span class="text-xs font-mono uppercase text-black font-bold">${item.cor}</span>
           </button>
         </td>
         <td class="py-3 px-4 text-center">
-          <span class="px-2 py-0.5 rounded text-xs font-black bg-purple-100 text-purple-900 border border-purple-200">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-900 border border-purple-200">
             ${item.estadoSigla}
           </span>
         </td>
-        <td class="py-3 px-4 font-black text-black">
+        <td class="py-3 px-4 font-bold text-black">
           ${escapeHtml(item.municipioNome)}
         </td>
         <td class="py-3 px-4 text-center">
@@ -999,25 +1065,25 @@ const App = (() => {
             ${escapeHtml(item.marcaNome)}
           </span>
         </td>
-        <td class="py-3 px-4 font-bold text-black">
+        <td class="py-3 px-4 font-semibold text-black">
           <div class="flex items-center justify-between gap-1 max-w-[210px]">
             <div class="flex items-center gap-2 overflow-hidden">
-              <button type="button" class="btn-abrir-modal-cor inline-flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-purple-600 transition-all flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Alterar cor de ${escapeHtml(item.representante)}">
+              <button type="button" class="btn-abrir-modal-cor inline-flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-purple-600 transition-all flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="${editTitle}">
                 <span class="w-3.5 h-3.5 rounded-full border border-gray-400 flex-shrink-0" style="background-color: ${item.cor};"></span>
               </button>
               <span class="truncate">${escapeHtml(item.representante)}</span>
             </div>
-            <button type="button" class="btn-abrir-modal-cor text-gray-400 hover:text-purple-700 hover:bg-purple-100 p-1 rounded transition-colors flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="Editar nome ou cor de ${escapeHtml(item.representante)}">
+            <button type="button" class="btn-abrir-modal-cor text-gray-400 hover:text-purple-700 hover:bg-purple-100 p-1 rounded transition-colors flex-shrink-0" data-rep="${escapeHtml(item.representante)}" data-cor="${item.cor}" title="${editTitle}">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
           </div>
         </td>
         <td class="py-3 px-4 text-center">
           <div class="flex items-center justify-center space-x-2">
-            <button data-id="${item.id}" class="btn-focar text-purple-700 hover:text-purple-900 p-1.5 hover:bg-purple-100 rounded-md transition-colors" title="Focar no mapa">
+            <button data-id="${item.id}" class="btn-focar text-purple-700 hover:text-purple-900 p-1.5 hover:bg-purple-100 rounded-md transition-colors" title="${t('title_focar_mapa')}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
-            <button data-id="${item.id}" class="btn-remover text-rose-600 hover:text-rose-800 p-1.5 hover:bg-rose-50 rounded-md transition-colors" title="Remover registro">
+            <button data-id="${item.id}" class="btn-remover text-rose-500 hover:text-rose-400 p-1.5 hover:bg-rose-500/10 rounded-md transition-colors" title="${t('title_remover_registro')}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
@@ -1080,11 +1146,11 @@ const App = (() => {
 
   function baixarPlanilhaModelo() {
     if (!state.estadoSelecionado) {
-      showToast('Selecione primeiro um Estado para gerar a planilha modelo.', 'warning');
+      showToast(t('toast_sel_estado_modelo'), 'warning');
       return;
     }
     if (!state.municipiosAtuais || state.municipiosAtuais.length === 0) {
-      showToast('Aguarde o carregamento dos municípios.', 'warning');
+      showToast(t('toast_aguarde_municipios'), 'warning');
       return;
     }
 
@@ -1094,7 +1160,7 @@ const App = (() => {
         state.municipiosAtuais,
         state.marcas
       );
-      showToast(`Modelo de planilha baixado (${state.municipiosAtuais.length} cidades).`, 'success');
+      showToast(t('toast_modelo_baixado', { n: state.municipiosAtuais.length }), 'success');
     } catch (e) {
       showToast(e.message, 'error');
     }
@@ -1102,20 +1168,20 @@ const App = (() => {
 
   async function processarPlanilhaUpload(file) {
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
-      showToast('Selecione um arquivo Excel (.xlsx ou .xls).', 'error');
+      showToast(t('toast_arq_invalido'), 'error');
       return;
     }
 
     try {
       const rows = await ExcelManager.readImportFile(file);
       if (rows.length === 0) {
-        showToast('Nenhuma linha preenchida com Representante e ID IBGE encontrada.', 'warning');
+        showToast(t('toast_planilha_vazia'), 'warning');
         return;
       }
       await executarImportacaoEmLote(rows);
     } catch (err) {
       console.error(err);
-      showToast('Erro ao ler a planilha: ' + err.message, 'error');
+      showToast(t('toast_erro_planilha') + err.message, 'error');
     }
   }
 
@@ -1217,7 +1283,7 @@ const App = (() => {
         } finally {
           concluidos++;
           const pct = Math.round((concluidos / total) * 100);
-          txtProgresso.textContent = `${concluidos} de ${total} municípios`;
+          txtProgresso.textContent = t('modal_prog_count', { atual: concluidos, total });
           pctProgresso.textContent = `${pct}%`;
           barraProgresso.style.width = `${pct}%`;
         }
@@ -1241,40 +1307,35 @@ const App = (() => {
       MapManager.fitAllRegisteredCities();
     }
 
-    showToast(`Importação concluída! ${adicionados} adicionados com sucesso${erros > 0 ? `, ${erros} com falha` : ''}.`, adicionados > 0 ? 'success' : 'warning');
+    const errPart = erros > 0 ? t('toast_import_err_part', { erros }) : '';
+    showToast(t('toast_import_ok', { add: adicionados, err: errPart }), adicionados > 0 ? 'success' : 'warning');
   }
 
   /**
-   * Baixar Pacote Final (.zip):
-   * 1. Imagem PNG sempre com enquadramento perfeito do Estado selecionado (sem perder o foco de navegação)
-   * 2. Planilha ExcelJS estilizada com cores ARGB
-   * 3. Relatório Executivo em PDF de 2 Folhas (Folha 1: Mapa Colorido do Estado | Folha 2: Resumo e Legenda Completa)
+   * Baixar Pacote Final (.zip)
    */
   async function baixarPacoteFinal() {
     if (state.isExporting) return;
 
     if (state.itensCadastrados.length === 0) {
-      showToast('Cadastre ao menos um município antes de exportar o pacote.', 'warning');
+      showToast(t('toast_cadastre_antes'), 'warning');
       return;
     }
 
     state.isExporting = true;
     const btn = document.getElementById('btnBaixarPacote');
     const btnText = document.getElementById('btnBaixarPacoteText');
-    const originalText = btnText.innerHTML;
 
     try {
       btn.classList.add('opacity-75', 'cursor-wait');
-      btnText.textContent = 'Renderizando mapa vetorial executivo...';
+      btnText.textContent = t('export_step_1');
 
-      // 1. Obter ou carregar malhas municipais do estado
       let malha = state.malhaMunicipios;
       if (!malha && state.estadoSelecionado) {
         malha = await IBGEService.getMalhaMunicipiosEstado(state.estadoSelecionado.sigla);
         state.malhaMunicipios = malha;
       }
 
-      // 2. Renderização do mapa vetorial de alta definição para o geomarketing corporativo
       const vectorMapResult = await ExcelManager.renderExecutiveVectorMap(
         malha,
         state.itensCadastrados,
@@ -1282,12 +1343,10 @@ const App = (() => {
         state.municipiosAtuais
       );
 
-      // 3. Planilha Excel padronizada
-      btnText.textContent = 'Gerando planilha Excel padronizada...';
+      btnText.textContent = t('export_step_2');
       const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
 
-      // 4. Relatório Executivo em PDF de 2 Folhas (Padrão Corporativo de Geomarketing)
-      btnText.textContent = 'Gerando Relatório Executivo em PDF (2 páginas)...';
+      btnText.textContent = t('export_step_3');
       const pdfBlob = await ExcelManager.generatePdfReport(
         vectorMapResult,
         state.estadoSelecionado,
@@ -1295,18 +1354,17 @@ const App = (() => {
         state.municipiosAtuais
       );
 
-      // 5. Compactação em .zip (Mapa Executivo PNG + Planilha Excel + Relatório PDF)
-      btnText.textContent = 'Compactando pacote .zip executivo...';
+      btnText.textContent = t('export_step_4');
       await ExcelManager.downloadZipPackage(vectorMapResult.blob, excelBuffer, pdfBlob);
 
-      showToast('Relatório Executivo gerado com sucesso (PDF Geomarketing + Mapa HD + Excel)!', 'success');
+      showToast(t('toast_pacote_ok'), 'success');
 
     } catch (err) {
       console.error(err);
-      showToast('Erro ao exportar pacote: ' + err.message, 'error');
+      showToast(t('toast_erro_pacote') + err.message, 'error');
     } finally {
       state.isExporting = false;
-      btnText.innerHTML = originalText;
+      btnText.textContent = t('btn_baixar_pacote');
       btn.classList.remove('opacity-75', 'cursor-wait');
     }
   }
@@ -1340,10 +1398,10 @@ const App = (() => {
 
     const toast = document.createElement('div');
     toast.className = `pointer-events-auto flex items-center p-3.5 rounded-xl shadow-lg border text-xs sm:text-sm font-medium transition-all transform duration-300 translate-y-2 opacity-0 max-w-sm ${
-      tipo === 'success' ? 'bg-emerald-800 text-emerald-100 border-emerald-700' :
-      tipo === 'error' ? 'bg-rose-800 text-rose-100 border-rose-700' :
-      tipo === 'warning' ? 'bg-amber-800 text-amber-100 border-amber-700' :
-      'bg-gray-900 text-white border-purple-500'
+      tipo === 'success' ? 'bg-emerald-900 text-emerald-100 border-emerald-700' :
+      tipo === 'error' ? 'bg-rose-900 text-rose-100 border-rose-700' :
+      tipo === 'warning' ? 'bg-amber-900 text-amber-100 border-amber-700' :
+      'bg-gray-900 text-white border-blue-500'
     }`;
 
     const icon = tipo === 'success' ? '✓' : tipo === 'error' ? '✕' : tipo === 'warning' ? '⚠' : 'ℹ';
@@ -1372,9 +1430,11 @@ const App = (() => {
 
   return {
     init,
+    onLanguageChanged,
     alterarCorRepresentante,
     abrirModalAlterarCor
   };
 })();
 
+window.App = App;
 window.addEventListener('DOMContentLoaded', App.init);

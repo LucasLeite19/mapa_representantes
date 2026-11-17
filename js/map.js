@@ -203,11 +203,11 @@ const MapManager = (() => {
       }
     }
 
-    // 2. Camada de Contorno Externo do Estado (Borda proeminente)
+    // 2. Camada de Contorno Externo do Estado (Borda proeminente Sentinel Cobalt)
     if (stateBorderGeoJson) {
       stateBoundaryLayer = L.geoJSON(stateBorderGeoJson, {
         style: {
-          color: '#4F46E5',       // Indigo Forte
+          color: '#3080FF',       // Sentinel Cobalt
           weight: 4,
           opacity: 1,
           fill: false,
@@ -354,21 +354,23 @@ const MapManager = (() => {
    * Mostra todas as marcas, representantes, badges, números e cores
    */
   function buildDetailedCardHtml(cidadeNome, itensDaCidade) {
+    const t = (window.I18nManager && window.I18nManager.t) ? window.I18nManager.t : (k => k);
     let rowsHtml = '';
     itensDaCidade.forEach(it => {
+      const editTitle = t('title_editar_rep', { nome: escapeHtml(it.representante) });
       rowsHtml += `
         <div class="flex items-center justify-between gap-2 py-1.5 border-b border-gray-700 last:border-0">
           <div class="flex items-center gap-2 overflow-hidden flex-1">
-            <button type="button" class="btn-abrir-modal-cor p-0.5 rounded-full hover:ring-2 hover:ring-white transition-all flex items-center justify-center flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Alterar cor de ${escapeHtml(it.representante)}">
+            <button type="button" class="btn-abrir-modal-cor p-0.5 rounded-full hover:ring-2 hover:ring-white transition-all flex items-center justify-center flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="${editTitle}">
               <span class="w-4 h-4 rounded-full border border-white/80 shadow-xs flex-shrink-0" style="background-color: ${it.cor};"></span>
             </button>
             <span class="rep-brand-badge brand-${it.marcaId || '1'}">${escapeHtml(it.marcaNome || 'Marca')}</span>
             <span class="font-semibold text-white text-xs truncate">${escapeHtml(it.representante)}</span>
-            <button type="button" class="btn-abrir-modal-cor p-1 text-gray-400 hover:text-white hover:bg-white/20 rounded transition-colors ml-auto flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="Editar nome ou cor de ${escapeHtml(it.representante)}">
+            <button type="button" class="btn-abrir-modal-cor p-1 text-gray-400 hover:text-white hover:bg-white/20 rounded transition-colors ml-auto flex-shrink-0" data-rep="${escapeHtml(it.representante)}" data-cor="${it.cor}" title="${editTitle}">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </button>
           </div>
-          <span class="text-amber-400 font-extrabold text-[10px] ml-1 flex-shrink-0">Nº ${it.seqId}</span>
+          <span class="text-amber-400 font-extrabold font-mono text-[10px] ml-1 flex-shrink-0">Nº ${it.seqId}</span>
         </div>
       `;
     });
@@ -377,13 +379,13 @@ const MapManager = (() => {
       <div class="rep-marker-label">
         <div class="rep-marker-city-title flex items-center justify-between">
           <span>${escapeHtml(cidadeNome)}</span>
-          <span class="text-[9px] font-semibold text-indigo-300 ml-2">(${itensDaCidade.length}/6 marcas)</span>
+          <span class="text-[9px] font-semibold text-blue-400 ml-2">${t('popup_marcas_count', { n: itensDaCidade.length })}</span>
         </div>
         <div class="flex flex-col gap-0.5">
           ${rowsHtml}
         </div>
         <div class="text-[9px] text-gray-400 mt-1.5 pt-1 border-t border-gray-700/60 text-center font-medium">
-          💡 Clique no lápis ou na cor para editar nome e cor do representante
+          ${t('popup_tip_edit')}
         </div>
       </div>
     `;
@@ -552,19 +554,20 @@ const MapManager = (() => {
     const textFullScreen = document.getElementById('textFullScreen');
     const floatingToolbar = document.getElementById('floatingFullscreenToolbar');
 
+    const t = (window.I18nManager && window.I18nManager.t) ? window.I18nManager.t : (k => k);
     isFullscreen = !isFullscreen;
 
     if (isFullscreen) {
       wrapper.classList.add('map-fullscreen');
       if (iconExpand) iconExpand.classList.add('hidden');
       if (iconCompress) iconCompress.classList.remove('hidden');
-      if (textFullScreen) textFullScreen.textContent = 'Sair';
+      if (textFullScreen) textFullScreen.textContent = t('map_sair');
       if (floatingToolbar) floatingToolbar.classList.remove('hidden');
     } else {
       wrapper.classList.remove('map-fullscreen');
       if (iconExpand) iconExpand.classList.remove('hidden');
       if (iconCompress) iconCompress.classList.add('hidden');
-      if (textFullScreen) textFullScreen.textContent = 'Tela Cheia';
+      if (textFullScreen) textFullScreen.textContent = t('map_tela_cheia');
       if (floatingToolbar) floatingToolbar.classList.add('hidden');
     }
 

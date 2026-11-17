@@ -1,74 +1,398 @@
 /* ==========================================================================
-   GESTOR DE REPRESENTANTES - ESTILOS PERSONALIZADOS
-   Paleta Padronizada: Fundo Branco, Textos em Preto e Destaques em Roxo Corporativo
+   GESTOR DE REPRESENTANTES — IDENTIDADE VISUAL SENTINEL COBALT
+   Inspirado em RBP Security Template & Portfolio Theme Pill
+   Tipografia: Plus Jakarta Sans & JetBrains Mono
+   Suporte Nativo: Dark Mode (Obsidian #0A0A0A) & Light Mode (Pure #FFFFFF)
    ========================================================================== */
 
-/* Logo do Header com Fundo Roxo Corporativo Gradiente e Alta Nitidez */
+:root,
+html.light {
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-muted: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --bg-input: #ffffff;
+  --bg-input-disabled: #f1f5f9;
+  --text-primary: #0a0a0a;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --border-color: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --primary-bg: #0a0a0a;
+  --primary-fg: #ffffff;
+  --primary-hover: #27272a;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(37, 99, 235, 0.08);
+  --accent-border: rgba(37, 99, 235, 0.25);
+  --pill-bg: rgba(244, 244, 245, 0.9);
+  --pill-border: #e4e4e7;
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+html.dark {
+  --bg-main: #0a0a0a;
+  --bg-surface: #121212;
+  --bg-muted: #18181b;
+  --bg-elevated: #171717;
+  --bg-input: #0f0f11;
+  --bg-input-disabled: #18181b;
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
+  --border-color: #262626;
+  --border-strong: #363636;
+  --primary-bg: #fafafa;
+  --primary-fg: #0a0a0a;
+  --primary-hover: #e5e5e5;
+  --accent: #3080ff;
+  --accent-hover: #4d94ff;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(48, 128, 255, 0.14);
+  --accent-border: rgba(48, 128, 255, 0.35);
+  --pill-bg: rgba(20, 20, 20, 0.88);
+  --pill-border: #262626;
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+}
+
+/* Tipografia Global Plus Jakarta Sans */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Transição Suave Global entre Modo Claro e Escuro */
+body,
+header,
+nav,
+footer,
+div,
+section,
+table,
+thead,
+tbody,
+tr,
+td,
+th,
+input,
+select,
+button,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+label {
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s ease;
+}
+
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   ADAPTAÇÃO AUTOMÁTICA DE SUPERFÍCIES, BORDAS E TEXTOS (DARK & LIGHT)
+   ========================================================================== */
+
+html.dark .bg-white {
+  background-color: var(--bg-surface) !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: var(--bg-muted) !important;
+}
+
+html.dark .text-black,
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-color) !important;
+}
+
+/* Inputs e Selects no Padrão Sentinel */
+select,
+input[type="text"] {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+
+select:disabled,
+input:disabled {
+  background-color: var(--bg-input-disabled) !important;
+  color: var(--text-muted) !important;
+}
+
+select:focus,
+input[type="text"]:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-soft) !important;
+  outline: none !important;
+}
+
+html.dark select option {
+  background-color: #141414;
+  color: #fafafa;
+}
+
+/* Substituição de utilitários antigos roxos pelo Azul Cobalto Sentinel */
+.text-purple-600,
+.text-purple-700,
+.text-purple-800,
+.text-purple-900,
+.text-purple-950 {
+  color: var(--accent) !important;
+}
+
+.bg-purple-600,
+.bg-purple-700 {
+  background-color: var(--accent) !important;
+}
+
+.bg-purple-50,
+.bg-purple-100 {
+  background-color: var(--accent-soft) !important;
+}
+
+.border-purple-200,
+.border-purple-400,
+.border-purple-600 {
+  border-color: var(--accent-border) !important;
+}
+
+/* Hover em linhas de tabela e cartões */
+html.dark tr.hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-purple-50:hover,
+html.dark .hover\:bg-purple-100:hover {
+  background-color: #1f1f23 !important;
+}
+
+/* ==========================================================================
+   HEADER, LOGO & PÍLULA DE TEMA E IDIOMA (PORTFOLIO REFERENCE)
+   ========================================================================== */
+
 .header-logo-badge {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  background: linear-gradient(135deg, #3080ff 0%, #1d4ed8 100%);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 4px 14px rgba(48, 128, 255, 0.3);
   color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Botões com Destaque Roxo (Tema Unificado) */
+/* Pílula de Controle de Tema + Idioma (Inspirada em portfolio-alpha-ruddy-43.vercel.app) */
+.theme-lang-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  background-color: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-card);
+}
+
+.theme-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--accent-soft);
+}
+
+.pill-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-strong);
+}
+
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.lang-toggle-btn:hover {
+  background-color: var(--accent-soft);
+}
+
+.lang-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 165px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  padding: 5px;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.35);
+  z-index: 100;
+}
+
+.lang-option-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.lang-option-btn:hover {
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.lang-option-active {
+  background-color: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   BOTÕES PRINCIPAIS E NAVEGAÇÃO (SENTINEL COBALT)
+   ========================================================================== */
+
+/* Botão Primário Sentinel: Alto Contraste com Acento Cobalto */
 .btn-purple-primary {
-  background-color: #7c3aed !important;
+  background-color: var(--accent) !important;
   color: #ffffff !important;
-  transition: all 0.15s ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
+
 .btn-purple-primary:hover {
-  background-color: #6d28d9 !important;
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.35);
+  background-color: var(--accent-hover) !important;
+  box-shadow: 0 4px 16px rgba(48, 128, 255, 0.35);
 }
+
 .btn-purple-primary:active {
   transform: scale(0.98);
 }
 
 /* Botões de Navegação do Sub-Header */
 .nav-btn-active {
-  background-color: #7c3aed !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
-}
-.nav-btn-inactive {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border: 1px solid #d1d5db !important;
-}
-.nav-btn-inactive:hover {
-  background-color: #f5f3ff !important;
-  color: #7c3aed !important;
-  border-color: #c4b5fd !important;
+  background-color: var(--primary-bg) !important;
+  color: var(--primary-fg) !important;
+  border: 1px solid var(--primary-bg) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
-/* Card Lateral com Altura Total e Encaixe Perfeito de Cima a Baixo */
+.nav-btn-active svg {
+  color: var(--primary-fg) !important;
+}
+
+.nav-btn-inactive {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.nav-btn-inactive:hover {
+  background-color: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+
+/* Botões de Camadas do Mapa */
+.btn-tile-active {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--accent) !important;
+  box-shadow: 0 2px 8px rgba(48, 128, 255, 0.3);
+}
+
+.btn-tile-inactive {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.btn-tile-inactive:hover {
+  background-color: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--accent-border) !important;
+}
+
+/* ==========================================================================
+   ESTRUTURA DE CARDS, MAPA E COMPONENTES FLUTUANTES
+   ========================================================================== */
+
 .sidebar-full-card {
   height: 100%;
   min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: var(--shadow-card);
 }
 
-/* Altura responsiva do container do mapa (Mobile: 380px, Tablet: 460px, Desktop: 560px) */
 #mapWrapper {
   position: relative;
   width: 100%;
   height: 380px;
   min-height: 380px;
-  background-color: #f8fafc;
+  background-color: var(--bg-muted);
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid #cbd5e1;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color);
 }
 
 @media (min-width: 640px) {
@@ -96,7 +420,6 @@
   z-index: 1;
 }
 
-/* Modo Tela Cheia */
 .map-fullscreen {
   position: fixed !important;
   top: 0 !important;
@@ -112,19 +435,19 @@
   border: none !important;
 }
 
-/* Rótulo Compacto Verticalizado no Mapa (Município e Representante estreitos) */
+/* Rótulo Compacto Verticalizado no Mapa */
 .rep-compact-tooltip {
-  background: rgba(15, 23, 42, 0.88) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  background: rgba(10, 10, 10, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: 4px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45) !important;
-  padding: 1px 3px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+  padding: 1px 4px !important;
   color: #ffffff !important;
   pointer-events: none !important;
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
   white-space: normal !important;
-  max-width: 72px !important;
+  max-width: 74px !important;
   min-width: 32px !important;
   text-align: center !important;
 }
@@ -155,28 +478,27 @@
 .rep-compact-rep {
   font-size: 7.5px;
   font-weight: 700;
-  color: #fde047;
+  color: #60a5fa;
   line-height: 1.0;
   margin-top: 1px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
-/* Ocultar rótulos compactos quando o usuário desmarcar a opção de rótulos */
 .hide-map-tooltips .rep-compact-tooltip {
   display: none !important;
 }
 
 /* Card / Tooltip Detalhado no Hover ou Clique */
 .rep-custom-tooltip {
-  background: rgba(15, 23, 42, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 8px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
-  padding: 6px 9px !important;
-  color: #ffffff !important;
+  background: rgba(10, 10, 10, 0.96) !important;
+  border: 1px solid #262626 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65) !important;
+  padding: 7px 10px !important;
+  color: #fafafa !important;
   pointer-events: none !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   max-width: 270px;
 }
 
@@ -189,26 +511,25 @@
   flex-direction: column;
   align-items: stretch;
   gap: 3px;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .rep-marker-city-title {
-  color: #f8fafc;
+  color: #fafafa;
   font-size: 11px;
   font-weight: 800;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 2px;
+  border-bottom: 1px solid #262626;
+  padding-bottom: 3px;
   margin-bottom: 2px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
 .rep-brand-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font-size: 9px;
   font-weight: 800;
-  padding: 1px 5px;
+  padding: 1.5px 6px;
   border-radius: 4px;
   line-height: 1.1;
   text-transform: uppercase;
@@ -217,21 +538,21 @@
 }
 
 /* Badges de cores das Marcas 1 a 6 */
-.brand-1 { background-color: #2563eb; } /* Azul */
-.brand-2 { background-color: #dc2626; } /* Vermelho */
-.brand-3 { background-color: #059669; } /* Verde Esmeralda */
-.brand-4 { background-color: #d97706; color: #ffffff !important; } /* Âmbar */
-.brand-5 { background-color: #7c3aed; } /* Roxo */
-.brand-6 { background-color: #db2777; } /* Rosa */
+.brand-1 { background-color: #2563eb; }
+.brand-2 { background-color: #dc2626; }
+.brand-3 { background-color: #059669; }
+.brand-4 { background-color: #d97706; color: #ffffff !important; }
+.brand-5 { background-color: #4f46e5; }
+.brand-6 { background-color: #db2777; }
 
-/* Popup Leaflet Estilizado */
+/* Popup Leaflet Estilizado Sentinel */
 .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.96) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(6px) !important;
+  background: rgba(12, 12, 14, 0.96) !important;
+  color: #fafafa !important;
+  border: 1px solid #262626 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
   padding: 0 !important;
 }
 
@@ -241,11 +562,11 @@
 }
 
 .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.96) !important;
+  background: rgba(12, 12, 14, 0.96) !important;
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-  color: #94a3b8 !important;
+  color: #a3a3a3 !important;
   padding: 4px !important;
 }
 .leaflet-container a.leaflet-popup-close-button:hover {
@@ -254,74 +575,53 @@
 
 /* Tooltip ao passar o mouse sobre cidades da divisão municipal */
 .city-hover-tooltip {
-  background: rgba(15, 23, 42, 0.92) !important;
-  border: 1px solid rgba(56, 189, 248, 0.6) !important;
+  background: rgba(10, 10, 10, 0.94) !important;
+  border: 1px solid #3080ff !important;
   border-radius: 6px !important;
   padding: 3px 8px !important;
-  color: #ffffff !important;
+  color: #fafafa !important;
   font-size: 11px !important;
   font-weight: 700 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
   pointer-events: none !important;
 }
 .city-hover-tooltip::before {
   display: none !important;
 }
 
-/* Botões de Camadas Ativas e Inativas com destaque Roxo e Letras Pretas */
-.btn-tile-active {
-  background-color: #7c3aed !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
-}
-
-.btn-tile-inactive {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border: 1px solid #d1d5db !important;
-}
-.btn-tile-inactive:hover {
-  background-color: #ede9fe !important;
-  color: #7c3aed !important;
-  border-color: #c4b5fd !important;
-}
-
-/* Cartões Flutuantes em Tela Cheia com Fundo 100% Branco Sólido (Igual aos Botões) */
+/* Cartões Flutuantes em Tela Cheia e Legenda do Mapa adaptáveis ao Tema */
 .fullscreen-card-white {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  border: 1px solid #d1d5db !important;
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: 0.75rem !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
   padding: 0.625rem !important;
 }
 
 .fullscreen-card-white .card-title {
-  color: #000000 !important;
-  font-weight: 900 !important;
+  color: var(--text-primary) !important;
+  font-weight: 800 !important;
   font-size: 11px !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
   padding-bottom: 0.35rem !important;
   margin-bottom: 0.35rem !important;
-  border-bottom: 1px solid #e5e7eb !important;
+  border-bottom: 1px solid var(--border-color) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
 }
 
-/* Legenda do Mapa com Fundo 100% Branco Sólido e Alto Contraste */
 .map-legend-white {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  border: 1px solid #d1d5db !important;
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-  color: #000000 !important;
-  padding: 4px 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+  color: var(--text-primary) !important;
+  padding: 5px 11px !important;
 }
 
-/* Color picker nativo estilizado para mapa e tabela */
+/* Color picker nativo estilizado */
 .input-change-rep-color,
 .input-tabela-cor {
   -webkit-appearance: none;
@@ -344,20 +644,20 @@
   border-radius: 4px;
 }
 
-/* Scrollbars limpos */
+/* Scrollbars personalizados */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-strong);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-muted);
 }
 
 .cursor-wait {
