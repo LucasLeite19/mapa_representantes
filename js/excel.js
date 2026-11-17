@@ -813,6 +813,36 @@ const ExcelManager = (() => {
   }
 
   /**
+   * Download individual da Imagem PNG do Mapa Executivo
+   */
+  function downloadSingleImage(imageBlob, ufSigla = '') {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const ufPart = ufSigla ? `_${ufSigla.toLowerCase()}` : '';
+    saveAs(imageBlob, `mapa_representantes${ufPart}_${timestamp}.png`);
+  }
+
+  /**
+   * Download individual do Relatório Executivo em PDF
+   */
+  function downloadSinglePdf(pdfBlob, ufSigla = '') {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const ufPart = ufSigla ? `_${ufSigla.toLowerCase()}` : '';
+    saveAs(pdfBlob, `relatorio_representantes${ufPart}_${timestamp}.pdf`);
+  }
+
+  /**
+   * Download individual da Planilha Excel Estilizada (.xlsx)
+   */
+  function downloadSingleExcel(excelBuffer, ufSigla = '') {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const ufPart = ufSigla ? `_${ufSigla.toLowerCase()}` : '';
+    const blob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    saveAs(blob, `tabela_representantes${ufPart}_${timestamp}.xlsx`);
+  }
+
+  /**
    * Empacota o PNG, XLSX e PDF em .zip e inicia o download
    */
   async function downloadZipPackage(imageBlob, excelBuffer, pdfBlob) {
@@ -840,6 +870,9 @@ const ExcelManager = (() => {
     generateStyledExcelBuffer,
     renderExecutiveVectorMap,
     generatePdfReport,
+    downloadSingleImage,
+    downloadSinglePdf,
+    downloadSingleExcel,
     downloadZipPackage
   };
 })();

@@ -30,6 +30,12 @@ const App = (() => {
     return (window.I18nManager && window.I18nManager.t) ? window.I18nManager.t(key, params) : key;
   }
 
+  function persistState() {
+    if (window.StorageManager) {
+      window.StorageManager.scheduleSave(state);
+    }
+  }
+
   /**
    * Inicialização do Sistema
    */
@@ -42,13 +48,135 @@ const App = (() => {
     renderSelectMarcas();
     setCorAtual(getRandomColor());
     await carregarEstados();
+    await restaurarTrabalhoSalvo();
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
   }
 
+  /**
+   * Restaura automaticamente o último trabalho salvo no IndexedDB local
+   */
+  async function restaurarTrabalhoSalvo() {
+    if (!window.StorageManager) return;
+
+    try {
+      const saved = await window.StorageManager.loadWorkspace();
+      if (!saved) return;
+
+      if (Array.isArray(saved.marcas) && saved.marcas.length === 6) {
+        state.marcas = saved.marcas;
+      }
+
+      if (typeof saved.nextSeqId === 'number' && saved.nextSeqId >= 1) {
+        state.nextSeqId = saved.nextSeqId;
+      }
+
+      if (saved.estadoSelecionadoId) {
+        const selectEstado = document.getElementById('selectEstado');
+        if (selectEstado) {
+          selectEstado.value = String(saved.estadoSelecionadoId);
+        }
+        await onEstadoChange(saved.estadoSelecionadoId, true);
+      }
+
+      if (Array.isArray(saved.itensCadastrados) && saved.itensCadastrados.length > 0) {
+        state.itensCadastrados = saved.itensCadastrados;
+
+        // Se algum item salvo não tiver geoJson embutido, busca na malha local
+        const cidadesUnicas = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+        for (const mId of cidadesUnicas) {
+          const itensDaCidade = state.itensCadastrados.filter(it => String(it.municipioId) === mId);
+          let geoJson = itensDaCidade[0] ? itensDaCidade[0].geoJson : null;
+          if (!geoJson) {
+            try {
+              geoJson = await IBGEService.getMalhaMunicipio(mId);
+              itensDaCidade.forEach(it => { it.geoJson = geoJson; });
+            } catch (e) {
+              console.warn('Não foi possível restaurar geometria do município', mId, e);
+            }
+          }
+          if (geoJson) {
+            MapManager.syncMunicipalityLayer(mId, geoJson, itensDaCidade);
+          }
+        }
+
+        atualizarSelectMunicipios();
+        renderTabela();
+        atualizarMetricas();
+        atualizarResumoLateral();
+        showToast(t('toast_trabalho_restaurado', { n: state.itensCadastrados.length }), 'info');
+      }
+    } catch (err) {
+      console.warn('Falha ao restaurar trabalho salvo:', err);
+    }
+  }
+
+  /**
+   * Limpa todos os dados salvos no IndexedDB e reinicia a área de trabalho
+   */
+  async function limparTrabalhoCompleto() {
+    const cidadesAntigas = new Set(state.itensCadastrados.map(it => String(it.municipioId)));
+    cidadesAntigas.forEach(mId => {
+      MapManager.removeMunicipality(mId, []);
+    });
+
+    MapManager.clearPreview();
+    MapManager.clearStateHighlight();
+    MapManager.resetToBrasil();
+
+    state.itensCadastrados = [];
+    state.nextSeqId = 1;
+    state.estadoSelecionado = null;
+    state.municipiosAtuais = [];
+    state.estadoBounds = null;
+    state.previewGeoJson = null;
+    state.malhaEstado = null;
+    state.malhaMunicipios = null;
+    state.marcas = [
+      { id: 1, nome: 'Marca 1' },
+      { id: 2, nome: 'Marca 2' },
+      { id: 3, nome: 'Marca 3' },
+      { id: 4, nome: 'Marca 4' },
+      { id: 5, nome: 'Marca 5' },
+      { id: 6, nome: 'Marca 6' }
+    ];
+
+    const selectEstado = document.getElementById('selectEstado');
+    if (selectEstado) selectEstado.value = '';
+
+    const selectMunicipio = document.getElementById('selectMunicipio');
+    if (selectMunicipio) {
+      selectMunicipio.innerHTML = `<option value="">${t('opt_selecione_estado_primeiro')}</option>`;
+      selectMunicipio.disabled = true;
+    }
+
+    const labelTotal = document.getElementById('labelTotalMunicipios');
+    if (labelTotal) labelTotal.textContent = '';
+
+    const infoModelo = document.getElementById('infoModeloEstado');
+    if (infoModelo) infoModelo.textContent = t('info_nenhum_estado');
+
+    renderSelectMarcas(null);
+    renderTabela();
+    atualizarMetricas();
+    atualizarResumoLateral();
+
+    if (window.StorageManager) {
+      await window.StorageManager.clearWorkspace();
+    }
+
+    const modalLimpar = document.getElementById('modalLimparDados');
+    if (modalLimpar) modalLimpar.classList.add('hidden');
+
+    showToast(t('toast_dados_limpos'), 'info');
+  }
+
   function onLanguageChanged() {
     setAbaAtiva(state.abaAtiva || 'manual');
+    if (window.StorageManager && typeof window.StorageManager.refreshStatusText === 'function') {
+      window.StorageManager.refreshStatusText();
+    }
 
     // Atualiza o primeiro item de selectEstado
     const selectEstado = document.getElementById('selectEstado');
@@ -405,28 +533,15 @@ const App = (() => {
       }
     });
 
-    // Alternância do título da aba ao sair da página (atrai o usuário de volta)
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        document.title = t('page_title_away');
-      } else {
-        document.title = t('page_title');
-      }
-    });
+    // Padronização do título da aba do navegador (mantém sempre o nome oficial limpo)
+    document.title = t('page_title');
 
-    window.addEventListener('blur', () => {
-      document.title = t('page_title_away');
-    });
-
-    window.addEventListener('focus', () => {
-      document.title = t('page_title');
-    });
-
-    // Alerta de proteção para dados em memória volátil antes de fechar a aba
+    // Aviso inteligente ao sair: apenas se houver alterações pendentes ainda não gravadas no IndexedDB
     window.addEventListener('beforeunload', (e) => {
-      if (state.itensCadastrados && state.itensCadastrados.length > 0) {
+      if (window.StorageManager && window.StorageManager.hasUnsavedChanges()) {
+        window.StorageManager.flushPendingSave();
         e.preventDefault();
-        e.returnValue = 'Os representantes cadastrados estão salvos apenas na memória volátil e serão perdidos ao sair ou atualizar a página. Deseja realmente sair?';
+        e.returnValue = 'Existem alterações pendentes de salvamento.';
         return e.returnValue;
       }
     });
@@ -464,8 +579,38 @@ const App = (() => {
       }
     });
 
-    // Botão Baixar Pacote (.zip)
-    document.getElementById('btnBaixarPacote').addEventListener('click', baixarPacoteFinal);
+    // 4 Botões Independentes de Exportação (Imagem, PDF, Excel, Pacote .ZIP)
+    const btnImg = document.getElementById('btnBaixarImagem');
+    const btnPdf = document.getElementById('btnBaixarPdf');
+    const btnExcel = document.getElementById('btnBaixarExcel');
+    const btnZip = document.getElementById('btnBaixarPacote');
+
+    if (btnImg) btnImg.addEventListener('click', baixarApenasImagem);
+    if (btnPdf) btnPdf.addEventListener('click', baixarApenasPdf);
+    if (btnExcel) btnExcel.addEventListener('click', baixarApenasExcel);
+    if (btnZip) btnZip.addEventListener('click', baixarPacoteFinal);
+
+    // Botão e Modal de Limpar Dados Salvos (Novo Trabalho)
+    const btnLimpar = document.getElementById('btnLimparDados');
+    const modalLimpar = document.getElementById('modalLimparDados');
+    const btnFecharLimpar = document.getElementById('btnFecharModalLimpar');
+    const btnCancelarLimpar = document.getElementById('btnCancelarModalLimpar');
+    const btnConfirmarLimpar = document.getElementById('btnConfirmarLimparDados');
+
+    if (btnLimpar && modalLimpar) {
+      btnLimpar.addEventListener('click', () => {
+        modalLimpar.classList.remove('hidden');
+      });
+    }
+    if (btnFecharLimpar && modalLimpar) {
+      btnFecharLimpar.addEventListener('click', () => modalLimpar.classList.add('hidden'));
+    }
+    if (btnCancelarLimpar && modalLimpar) {
+      btnCancelarLimpar.addEventListener('click', () => modalLimpar.classList.add('hidden'));
+    }
+    if (btnConfirmarLimpar) {
+      btnConfirmarLimpar.addEventListener('click', limparTrabalhoCompleto);
+    }
 
     // Modal de Gerenciar Nomes das Marcas
     const btnGerenciarMarcas = document.getElementById('btnGerenciarMarcas');
@@ -508,6 +653,7 @@ const App = (() => {
         const selectMun = document.getElementById('selectMunicipio');
         renderSelectMarcas(selectMun ? selectMun.value : null);
         renderTabela();
+        persistState();
         modalMarcas.classList.add('hidden');
         showToast(t('toast_marcas_ok'), 'success');
       });
@@ -542,7 +688,7 @@ const App = (() => {
   /**
    * Ação ao trocar o Estado selecionado
    */
-  async function onEstadoChange(estadoId) {
+  async function onEstadoChange(estadoId, skipSave = false) {
     const selectMunicipio = document.getElementById('selectMunicipio');
     const labelTotal = document.getElementById('labelTotalMunicipios');
     const infoModelo = document.getElementById('infoModeloEstado');
@@ -562,12 +708,15 @@ const App = (() => {
       MapManager.resetToBrasil();
       renderSelectMarcas(null);
       atualizarResumoLateral();
+      if (!skipSave) persistState();
       return;
     }
 
     const uf = state.estados.find(e => String(e.id) === String(estadoId));
+    if (!uf) return;
     state.estadoSelecionado = uf;
     infoModelo.textContent = t('info_estado_selecionado', { nome: uf.nome, sigla: uf.sigla });
+    if (!skipSave) persistState();
 
     const bounds = IBGEService.getEstadoBounds(uf.sigla);
     if (bounds) {
@@ -827,6 +976,7 @@ const App = (() => {
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
+    persistState();
 
     selectMunicipio.value = '';
     renderSelectMarcas(null);
@@ -953,6 +1103,7 @@ const App = (() => {
       renderTabela();
       atualizarResumoLateral();
       atualizarMetricas();
+      persistState();
 
       showToast(
         t(cidadesAfetadas.size === 1 ? 'toast_rep_atualizado_one' : 'toast_rep_atualizado_other', {
@@ -989,6 +1140,7 @@ const App = (() => {
         MapManager.syncMunicipalityLayer(mId, null, itensDaCidade);
       });
       renderTabela();
+      persistState();
     }
   }
 
@@ -1134,6 +1286,7 @@ const App = (() => {
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
+    persistState();
   }
 
   function atualizarMetricas() {
@@ -1302,6 +1455,7 @@ const App = (() => {
     renderTabela();
     atualizarMetricas();
     atualizarResumoLateral();
+    persistState();
 
     if (state.itensCadastrados.length > 0) {
       MapManager.fitAllRegisteredCities();
@@ -1312,7 +1466,141 @@ const App = (() => {
   }
 
   /**
-   * Baixar Pacote Final (.zip)
+   * Obtém ou carrega a malha municipal do estado ativo (ou do primeiro item cadastrado)
+   */
+  async function obterMalhaParaExportacao() {
+    let malha = state.malhaMunicipios;
+    if (!malha) {
+      const sigla = state.estadoSelecionado
+        ? state.estadoSelecionado.sigla
+        : (state.itensCadastrados[0] ? state.itensCadastrados[0].estadoSigla : null);
+      if (sigla) {
+        malha = await IBGEService.getMalhaMunicipiosEstado(sigla);
+        state.malhaMunicipios = malha;
+      }
+    }
+    return malha;
+  }
+
+  /**
+   * 1. Baixar Apenas Imagem (PNG)
+   */
+  async function baixarApenasImagem() {
+    if (state.isExporting) return;
+    if (state.itensCadastrados.length === 0) {
+      showToast(t('toast_cadastre_antes'), 'warning');
+      return;
+    }
+
+    state.isExporting = true;
+    const btn = document.getElementById('btnBaixarImagem');
+    const btnText = document.getElementById('btnBaixarImagemText');
+
+    try {
+      if (btn) btn.classList.add('opacity-75', 'cursor-wait');
+      if (btnText) btnText.textContent = t('export_img_loading');
+
+      const malha = await obterMalhaParaExportacao();
+      const vectorMapResult = await ExcelManager.renderExecutiveVectorMap(
+        malha,
+        state.itensCadastrados,
+        state.estadoSelecionado,
+        state.municipiosAtuais
+      );
+
+      const ufSigla = state.estadoSelecionado ? state.estadoSelecionado.sigla : '';
+      ExcelManager.downloadSingleImage(vectorMapResult.blob, ufSigla);
+      showToast(t('toast_img_ok'), 'success');
+    } catch (err) {
+      console.error(err);
+      showToast(t('toast_erro_pacote') + err.message, 'error');
+    } finally {
+      state.isExporting = false;
+      if (btnText) btnText.textContent = t('btn_baixar_imagem');
+      if (btn) btn.classList.remove('opacity-75', 'cursor-wait');
+    }
+  }
+
+  /**
+   * 2. Baixar Apenas PDF
+   */
+  async function baixarApenasPdf() {
+    if (state.isExporting) return;
+    if (state.itensCadastrados.length === 0) {
+      showToast(t('toast_cadastre_antes'), 'warning');
+      return;
+    }
+
+    state.isExporting = true;
+    const btn = document.getElementById('btnBaixarPdf');
+    const btnText = document.getElementById('btnBaixarPdfText');
+
+    try {
+      if (btn) btn.classList.add('opacity-75', 'cursor-wait');
+      if (btnText) btnText.textContent = t('export_pdf_loading');
+
+      const malha = await obterMalhaParaExportacao();
+      const vectorMapResult = await ExcelManager.renderExecutiveVectorMap(
+        malha,
+        state.itensCadastrados,
+        state.estadoSelecionado,
+        state.municipiosAtuais
+      );
+
+      const pdfBlob = await ExcelManager.generatePdfReport(
+        vectorMapResult,
+        state.estadoSelecionado,
+        state.itensCadastrados,
+        state.municipiosAtuais
+      );
+
+      const ufSigla = state.estadoSelecionado ? state.estadoSelecionado.sigla : '';
+      ExcelManager.downloadSinglePdf(pdfBlob, ufSigla);
+      showToast(t('toast_pdf_ok'), 'success');
+    } catch (err) {
+      console.error(err);
+      showToast(t('toast_erro_pacote') + err.message, 'error');
+    } finally {
+      state.isExporting = false;
+      if (btnText) btnText.textContent = t('btn_baixar_pdf');
+      if (btn) btn.classList.remove('opacity-75', 'cursor-wait');
+    }
+  }
+
+  /**
+   * 3. Baixar Apenas Planilha Excel (.xlsx)
+   */
+  async function baixarApenasExcel() {
+    if (state.isExporting) return;
+    if (state.itensCadastrados.length === 0) {
+      showToast(t('toast_cadastre_antes'), 'warning');
+      return;
+    }
+
+    state.isExporting = true;
+    const btn = document.getElementById('btnBaixarExcel');
+    const btnText = document.getElementById('btnBaixarExcelText');
+
+    try {
+      if (btn) btn.classList.add('opacity-75', 'cursor-wait');
+      if (btnText) btnText.textContent = t('export_excel_loading');
+
+      const excelBuffer = await ExcelManager.generateStyledExcelBuffer(state.itensCadastrados);
+      const ufSigla = state.estadoSelecionado ? state.estadoSelecionado.sigla : '';
+      ExcelManager.downloadSingleExcel(excelBuffer, ufSigla);
+      showToast(t('toast_excel_ok'), 'success');
+    } catch (err) {
+      console.error(err);
+      showToast(t('toast_erro_pacote') + err.message, 'error');
+    } finally {
+      state.isExporting = false;
+      if (btnText) btnText.textContent = t('btn_baixar_excel');
+      if (btn) btn.classList.remove('opacity-75', 'cursor-wait');
+    }
+  }
+
+  /**
+   * 4. Baixar Pacote Final (.zip)
    */
   async function baixarPacoteFinal() {
     if (state.isExporting) return;
@@ -1330,11 +1618,7 @@ const App = (() => {
       btn.classList.add('opacity-75', 'cursor-wait');
       btnText.textContent = t('export_step_1');
 
-      let malha = state.malhaMunicipios;
-      if (!malha && state.estadoSelecionado) {
-        malha = await IBGEService.getMalhaMunicipiosEstado(state.estadoSelecionado.sigla);
-        state.malhaMunicipios = malha;
-      }
+      const malha = await obterMalhaParaExportacao();
 
       const vectorMapResult = await ExcelManager.renderExecutiveVectorMap(
         malha,
